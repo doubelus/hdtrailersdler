@@ -1,0 +1,6 @@
+C:\Users\Brian\AppData\Local\Temporary Projects\TrailerSnatch\bin\Debug\TrailerSnatch.exe
+C:\Users\Brian\AppData\Local\Temporary Projects\TrailerSnatch\bin\Debug\TrailerSnatch.pdb
+C:\Users\Brian\AppData\Local\Temporary Projects\TrailerSnatch\bin\Debug\RssReader.dll
+C:\Users\Brian\AppData\Local\Temporary Projects\TrailerSnatch\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\Brian\AppData\Local\Temporary Projects\TrailerSnatch\obj\Debug\TrailerSnatch.exe
+C:\Users\Brian\AppData\Local\Temporary Projects\TrailerSnatch\obj\Debug\TrailerSnatch.pdb

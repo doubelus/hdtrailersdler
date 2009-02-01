@@ -21,6 +21,10 @@ namespace HDTrailersNETDownloader
         static bool GrabPoster;
         static bool CreateFolder;
         static bool VerboseLogging;
+        static bool PhysicalLog;
+        static bool PauseWhenDone;
+        static FileStream logFS;
+        static StreamWriter sw;
         #endregion
 
         static void Main(string[] args)
@@ -98,7 +102,9 @@ namespace HDTrailersNETDownloader
             
             
             WriteLog("Done");
-            Console.ReadLine();
+
+            if(PauseWhenDone)
+                Console.ReadLine();
 
         }
 
@@ -198,12 +204,31 @@ namespace HDTrailersNETDownloader
             //Load our config
             // Get the AppSettings section.
 
-            QualityPreference = ConfigurationManager.AppSettings["QualityPreference"].Split(new Char [] {','});
+            QualityPreference = ConfigurationManager.AppSettings["QualityPreference"].Split(new Char[] { ',' });
             DownloadFolder = ConfigurationManager.AppSettings["DownloadFolder"];
             AllorToday = ConfigurationManager.AppSettings["AllorToday"];
             GrabPoster = Convert.ToBoolean(ConfigurationManager.AppSettings["GrabPoster"]);
             CreateFolder = Convert.ToBoolean(ConfigurationManager.AppSettings["CreateFolder"]);
             VerboseLogging = Convert.ToBoolean(ConfigurationManager.AppSettings["VerboseLogging"]);
+            PhysicalLog = Convert.ToBoolean(ConfigurationManager.AppSettings["PhysicalLog"]);
+            PauseWhenDone = Convert.ToBoolean(ConfigurationManager.AppSettings["PauseWhenDone"]);
+
+            if (PhysicalLog)
+            {
+                
+                
+                if (!File.Exists("HD-Trailers.NET Downloader.log"))
+                    logFS = new FileStream("HD-Trailers.NET Downloader.log",FileMode.Create);
+                else
+                    logFS = new FileStream("HD-Trailers.NET Downloader.log",FileMode.Open);
+
+                sw = new StreamWriter(logFS);
+
+                
+            }
+
+
+
         }
 
         static bool GetTrailer(string downloadURL, string trailerTitle, string downloadPath)
@@ -275,10 +300,22 @@ namespace HDTrailersNETDownloader
 
         static void WriteLog(string text)
         {
-            if(text != "")
+            if (text != "")
+            {
                 Console.WriteLine(DateTime.Now.ToShortTimeString() + " - " + text);
+
+                if(PhysicalLog)                    
+                    sw.WriteLine(DateTime.Now.ToShortTimeString() + " - " + text);
+            }
             else
+            {
                 Console.WriteLine();
+
+                if(PhysicalLog)
+                    sw.WriteLine();
+            }
+
+
         }
     }
 }

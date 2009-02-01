@@ -46,13 +46,15 @@ namespace HDTrailersNETDownloader
             if (VerboseLogging)
                 WriteLog("RSS feed items (" + feedItems.Count.ToString() + ") grabbed successfully");
 
-            for (int i = 0; i < feedItems.Count; i++)
+            try
             {
-                //Add code to select day
-                //if (Convert.ToDateTime(feedItems[i].Pubdate) > DateTime.Now.AddDays(-15))
-                //{
-                WriteLog("");
-                WriteLog("Next trailer is : " + feedItems[i].Title);
+                for (int i = 0; i < feedItems.Count; i++)
+                {
+                    //Add code to select day
+                    //if (Convert.ToDateTime(feedItems[i].Pubdate) > DateTime.Now.AddDays(-15))
+                    //{
+                    WriteLog("");
+                    WriteLog("Next trailer is : " + feedItems[i].Title);
 
                     //Will come back null if preferred quality is not available
                     string tempTrailerURL = GetDownloadURL(feedItems[i].Link, QualityPreference);
@@ -71,7 +73,7 @@ namespace HDTrailersNETDownloader
                             WriteLog(tempTrailerURL);
                         }
 
-                        
+
                         if (CreateFolder)
                         {
                             bool tempDirectoryCreated = false;
@@ -97,14 +99,22 @@ namespace HDTrailersNETDownloader
                     }
                     else
                         WriteLog("Preferred quality not available. Skipping...");
-                //}
+                    //}
+                }
             }
-            
+            catch (Exception e)
+            {
+                WriteLog("ERROR: " + e.Message);
+                sw.Dispose();
+
+            }
             
             WriteLog("Done");
 
             if(PauseWhenDone)
                 Console.ReadLine();
+
+            sw.Dispose();
 
         }
 

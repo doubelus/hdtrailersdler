@@ -23,6 +23,7 @@ namespace HDTrailersNETDownloader
         static bool VerboseLogging;
         static bool PhysicalLog;
         static bool PauseWhenDone;
+        static int KeepFor;
         static FileStream logFS;
         static StreamWriter sw;
         #endregion
@@ -31,6 +32,8 @@ namespace HDTrailersNETDownloader
         {
             //Load config values
             Config_Load();
+
+
             if (VerboseLogging)
             {
                 WriteLog("Config loaded");
@@ -40,6 +43,9 @@ namespace HDTrailersNETDownloader
                 WriteLog(tString);
             }
 
+
+            //Delete folders/files if needed
+            DeleteEm();
 
             feedItems = GetFeedItems(@"http://www.hd-trailers.net/blog/feed/");
 
@@ -116,6 +122,38 @@ namespace HDTrailersNETDownloader
 
             sw.Dispose();
 
+        }
+
+        static void DeleteEm()
+        {
+            //Delete old trailers. If KeepFor = 0 ignore
+            if (KeepFor > 0)
+            {
+                WriteLog("Delete option selected. Deleting files/folders older than: " + KeepFor.ToString() + " days");
+                string[] dirList = (string[])Directory.GetDirectories(DownloadFolder);
+
+                for (int i = 0; i < dirList.Length; i++)
+                {
+                    if ((Directory.GetCreationTime(dirList[i]).AddDays(KeepFor)) < DateTime.Now)
+                    {
+                        Directory.Delete(dirList[i], true);
+                        if (VerboseLogging)
+                            WriteLog("Deleted directory: " + dirList[i]);
+                    }
+
+                }
+
+                string[] fileList = (string[])Directory.GetFiles(DownloadFolder);
+                for (int i = 0; i < fileList.Length; i++)
+                {
+                    if ((File.GetCreationTime(fileList[i]).AddDays(KeepFor)) < DateTime.Now && !fileList[i].Contains("folder"))
+                    {
+                        File.Delete(fileList[i]);
+                        if (VerboseLogging)
+                            WriteLog("Deleted file: " + fileList[i]);
+                    }
+                }
+            }
         }
 
         static RssItems GetFeedItems(string url)
@@ -222,6 +260,7 @@ namespace HDTrailersNETDownloader
             VerboseLogging = Convert.ToBoolean(ConfigurationManager.AppSettings["VerboseLogging"]);
             PhysicalLog = Convert.ToBoolean(ConfigurationManager.AppSettings["PhysicalLog"]);
             PauseWhenDone = Convert.ToBoolean(ConfigurationManager.AppSettings["PauseWhenDone"]);
+            KeepFor = Convert.ToInt32(ConfigurationManager.AppSettings["KeepFor"]);
 
             if (PhysicalLog)
             {
@@ -312,10 +351,10 @@ namespace HDTrailersNETDownloader
         {
             if (text != "")
             {
-                Console.WriteLine(DateTime.Now.ToShortTimeString() + " - " + text);
+                Console.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + " - " + text);
 
-                if(PhysicalLog)                    
-                    sw.WriteLine(DateTime.Now.ToShortTimeString() + " - " + text);
+                if(PhysicalLog)
+                    sw.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + " - " + text);
             }
             else
             {

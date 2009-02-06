@@ -198,7 +198,7 @@ namespace HDTrailersNETDownloader
             #region ExtractDownloadURLsFromSource
             try
             {
-                string tempString = data.Substring(data.IndexOf(@"<p><strong>Download</strong>:") + 30, data.IndexOf(@"</p>", data.IndexOf(@"<p><strong>Download</strong>:")) - data.IndexOf(@"<p><strong>Download</strong>:") - 30);
+                string tempString = data.Substring(data.IndexOf(@"Download</strong>:") + 18, data.IndexOf(@"</p>", data.IndexOf(@"Download</strong>:")) - data.IndexOf(@"Download</strong>:") - 18);
 
                 // Sample link: [0] = "<a href=\"http://movies.apple.com/movies/magnolia_pictures/twolovers/twolovers-clip_h480p.mov\">480p</a>"
                 string[] tempStringArray = tempString.Split(new Char[] { ',' });

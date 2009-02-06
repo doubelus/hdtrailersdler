@@ -16,6 +16,7 @@ namespace HDTrailersNETDownloader
         static RssItems feedItems;
         static string[] QualityPreference;
         static string CurrentQualityPreference;
+        static string CurrentSource;
         static string DownloadFolder;
         static string AllorToday;
         static bool GrabPoster;
@@ -92,16 +93,29 @@ namespace HDTrailersNETDownloader
 
                             tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title, DownloadFolder + @"\" + feedItems[i].Title.Replace(":", "") + @"\");
 
+                            //Assuming we downloaded the trailer OK and the config has been set to grab posters...
+                            if (tempBool && GrabPoster)
+                                GetPoster(CurrentSource,DownloadFolder + @"\" + feedItems[i].Title.Replace(":", "") + @"\");
+
                             //Delete the directory if it didn't download
                             if (tempBool == false && tempDirectoryCreated == true)
                                 Directory.Delete(DownloadFolder + @"\" + feedItems[i].Title.Replace(":", ""));
 
                         }
                         else
+                        {
+                            //Uncomment and remove when done debugging
                             tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title.Replace(":", ""), DownloadFolder + @"\");
+                            //tempBool = true;
+                            //Assuming we downloaded the trailer OK and the config has been set to grab posters...
+                            if (tempBool && GrabPoster)
+                                GetPoster(CurrentSource,DownloadFolder + @"\");
+
+                        }
 
                         if (tempBool)
                             WriteLog(feedItems[i].Title + " (" + CurrentQualityPreference + ") : Downloaded");
+
                     }
                     else
                         WriteLog("Preferred quality not available. Skipping...");
@@ -166,7 +180,7 @@ namespace HDTrailersNETDownloader
 
         }
 
-        //Pass in the blog post link and desired quality (480p, 720p, 1080p)
+        
         static string GetDownloadURL(string link, string[] quality)
         {
             #region DumpHTMLSourceToString
@@ -175,6 +189,9 @@ namespace HDTrailersNETDownloader
             Stream dataStream = response.GetResponseStream();
             StreamReader read = new StreamReader(dataStream);
             String data = read.ReadToEnd();
+
+            //Set data to CurrentSource.. will use to pull poster
+            CurrentSource = data;
             #endregion
 
 
@@ -223,28 +240,6 @@ namespace HDTrailersNETDownloader
 
         }
 
-        static string GetPosterURL(string link)
-        {
-            #region DumpHTMLSourceToString
-            HttpWebRequest site = (HttpWebRequest)WebRequest.Create(link);
-            HttpWebResponse response = (HttpWebResponse)site.GetResponse();
-            Stream dataStream = response.GetResponseStream();
-            StreamReader read = new StreamReader(dataStream);
-            String data = read.ReadToEnd();
-            #endregion
-
-
-            #region ExtractPosterURLFromSource
-            //figure out how to parse this
-            string tempString = data.Substring(data.IndexOf("margin-left: 10px; margin-right: 10px;\" src=\""), 50);
-
-
-            #endregion
-
-            return tempString;
-
-
-        }
 
         static void Config_Load()
         {
@@ -332,17 +327,46 @@ namespace HDTrailersNETDownloader
             
         }
 
-        static void GetPoster(string downloadURL, string trailerTitle, string downloadPath)
+        static void GetPoster(string source, string downloadPath)
         {
-            using (WebClient Client = new WebClient())
+
+            try
             {
-                if (VerboseLogging)
-                    WriteLog("Grabbing poster: " + trailerTitle);
+ 
+                //First get Poster URL
+                // Match this: margin-left: 10px; margin-right: 10px;" src="
+                // + 45
+                // Then poster URL ends on next "
+                string tempStart = "margin-left: 10px; margin-right: 10px;\" src=\"";
+                string tempEnd = "\"";
 
-                Client.DownloadFile(downloadURL, downloadPath + @"\folder.jpg");
+                
+                int urlStart = source.IndexOf(tempStart) + 45;
+                int urlEnd = source.IndexOf(tempEnd, (source.IndexOf(tempStart) + 45));
+                int difference = urlEnd - urlStart;
 
-                if (VerboseLogging)
-                    WriteLog("Grab successful");
+                
+
+                string tempString = source.Substring(source.IndexOf(tempStart) + 45, difference);
+
+
+                //Now get the actual poster
+                using (WebClient Client = new WebClient())
+                {
+
+                    if (VerboseLogging)
+                        WriteLog("Grabbing poster... ");
+
+                    Client.DownloadFile(tempString, downloadPath + @"folder.jpg");
+
+                    if (VerboseLogging)
+                        WriteLog("Poster grab successful");
+                }
+            }
+            catch (Exception e)
+            {
+                WriteLog("ERROR: Could not grab poster.. exception to follow:");
+                WriteLog(e.Message);
             }
 
         }

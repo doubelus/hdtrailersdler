@@ -1,6 +1,5 @@
 C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.exe
 C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.pdb
-C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\bin\Debug\RssReader.dll
 C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\obj\Debug\ResolveAssemblyReference.cache
 C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.exe
 C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.pdb

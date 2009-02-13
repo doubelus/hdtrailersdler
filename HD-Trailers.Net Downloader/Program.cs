@@ -7,6 +7,7 @@ using System.Net;
 using System.IO;
 using System.Collections.Specialized;
 using System.Configuration;
+using System.Collections;
 
 namespace HDTrailersNETDownloader
 {
@@ -24,13 +25,22 @@ namespace HDTrailersNETDownloader
         static bool VerboseLogging;
         static bool PhysicalLog;
         static bool PauseWhenDone;
+        static bool UseExclusions;
+        static ArrayList Exclusions = new ArrayList();
         static int KeepFor;
         static FileStream logFS;
         static StreamWriter sw;
+
         #endregion
 
         static void Main(string[] args)
         {
+            WriteLog("HD-Trailers.Net Downloader v.6 BETA");
+            WriteLog("CodePlex: http://www.codeplex.com/hdtrailersdler");
+            WriteLog("By Brian Charbonneau - blog: http://www.brianssparetime.com");
+            WriteLog("Please visit http://www.hd-trailers.net for archives");
+            WriteLog("");
+            
             //Load config values
             Config_Load();
 
@@ -42,6 +52,11 @@ namespace HDTrailersNETDownloader
                 for (int i = 1; i < QualityPreference.Length; i++)
                     tString = tString + "," + QualityPreference[i];
                 WriteLog(tString);
+
+                if (UseExclusions)
+                    WriteLog("Using exclusions...");
+                else
+                    WriteLog("Not using exclusions...");
             }
 
 
@@ -61,12 +76,12 @@ namespace HDTrailersNETDownloader
                     //if (Convert.ToDateTime(feedItems[i].Pubdate) > DateTime.Now.AddDays(-15))
                     //{
                     WriteLog("");
-                    WriteLog("Next trailer is : " + feedItems[i].Title);
+                    WriteLog("Next trailer (" + Convert.ToString(i + 1) + ") is : " + feedItems[i].Title);
 
                     //Will come back null if preferred quality is not available
                     string tempTrailerURL = GetDownloadURL(feedItems[i].Link, QualityPreference);
 
-                    if (tempTrailerURL != null)
+                    if (tempTrailerURL != null && !Exclusions.Contains(feedItems[i].Title))
                     {
                         //if(GrabPoster)
                         //{
@@ -93,9 +108,13 @@ namespace HDTrailersNETDownloader
 
                             tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title, DownloadFolder + @"\" + feedItems[i].Title.Replace(":", "") + @"\");
 
+                            //If download went ok, and we're using exclusions, add to list
+                            if (tempBool && UseExclusions)
+                                Exclusions.Add(feedItems[i].Title);
+
                             //Assuming we downloaded the trailer OK and the config has been set to grab posters...
                             if (tempBool && GrabPoster)
-                                GetPoster(CurrentSource,DownloadFolder + @"\" + feedItems[i].Title.Replace(":", "") + @"\");
+                                GetPoster(CurrentSource, DownloadFolder + @"\" + feedItems[i].Title.Replace(":", "") + @"\");
 
                             //Delete the directory if it didn't download
                             if (tempBool == false && tempDirectoryCreated == true)
@@ -109,7 +128,7 @@ namespace HDTrailersNETDownloader
                             //tempBool = true;
                             //Assuming we downloaded the trailer OK and the config has been set to grab posters...
                             if (tempBool && GrabPoster)
-                                GetPoster(CurrentSource,DownloadFolder + @"\");
+                                GetPoster(CurrentSource, DownloadFolder + @"\");
 
                         }
 
@@ -118,7 +137,13 @@ namespace HDTrailersNETDownloader
 
                     }
                     else
-                        WriteLog("Preferred quality not available. Skipping...");
+                    {
+                        if (tempTrailerURL == null)
+                            WriteLog("Preferred quality not available. Skipping...");
+                        else if (Exclusions.Contains(feedItems[i].Title))
+                            WriteLog("Title found in exclusions list. Skipping...");
+
+                    }
                     //}
                 }
             }
@@ -127,6 +152,17 @@ namespace HDTrailersNETDownloader
                 WriteLog("ERROR: " + e.Message);
                 sw.Dispose();
 
+            }
+
+            if (UseExclusions)
+            {
+                //We're using exclusions... write to file for next run
+                if(VerboseLogging)
+                    WriteLog("Serializing exclusion list...");
+                WriteExclusions();
+
+                if(VerboseLogging)
+                    WriteLog("Serialization Complete.");
             }
             
             WriteLog("Done");
@@ -256,23 +292,51 @@ namespace HDTrailersNETDownloader
             PhysicalLog = Convert.ToBoolean(ConfigurationManager.AppSettings["PhysicalLog"]);
             PauseWhenDone = Convert.ToBoolean(ConfigurationManager.AppSettings["PauseWhenDone"]);
             KeepFor = Convert.ToInt32(ConfigurationManager.AppSettings["KeepFor"]);
+            UseExclusions = Convert.ToBoolean(ConfigurationManager.AppSettings["UseExclusions"]);
+            
 
             if (PhysicalLog)
-            {
-                
-                
+            {   
                 if (!File.Exists("HD-Trailers.NET Downloader.log"))
                     logFS = new FileStream("HD-Trailers.NET Downloader.log",FileMode.Create);
                 else
                     logFS = new FileStream("HD-Trailers.NET Downloader.log",FileMode.Open);
 
-                sw = new StreamWriter(logFS);
+                sw = new StreamWriter(logFS);                
+            }
 
-                
+            if (UseExclusions)
+            {
+                GetExclusions();
             }
 
 
 
+        }
+
+        static void WriteExclusions()
+        {
+
+            System.Xml.Serialization.XmlSerializer serializer =
+              new System.Xml.Serialization.XmlSerializer(typeof(ArrayList));
+            System.IO.TextWriter writer =
+              new System.IO.StreamWriter("HD-Trailers.Net Downloader Exclusions.xml", false);
+            serializer.Serialize(writer, Exclusions);
+            writer.Close();
+        }
+
+        static void GetExclusions()
+        {
+            //We are using exclusions. Load into arraylist or create empty arraylist
+            if(File.Exists("HD-Trailers.Net Downloader Exclusions.xml"))
+            {
+            System.Xml.Serialization.XmlSerializer serializer =
+  new System.Xml.Serialization.XmlSerializer(typeof(ArrayList));
+            System.IO.TextReader reader =
+              new System.IO.StreamReader("HD-Trailers.Net Downloader Exclusions.xml");
+            Exclusions = (ArrayList)serializer.Deserialize(reader);
+            reader.Close();
+            }
         }
 
         static bool GetTrailer(string downloadURL, string trailerTitle, string downloadPath)

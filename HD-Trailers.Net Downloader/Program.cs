@@ -360,15 +360,17 @@ namespace HDTrailersNETDownloader
             
             if (!File.Exists(downloadPath + @"\" + fileName))
             {
-    
+
+                try
+                {
                     using (WebClient Client = new WebClient())
                     {
                         if (VerboseLogging)
                             WriteLog("Grabbing trailer: " + trailerTitle);
 
-                        if(downloadURL.Contains("yahoo"))
+                        if (downloadURL.Contains("yahoo"))
                         {
-                            Client.Headers.Add("Referer","http://movies.yahoo.com/");                            
+                            Client.Headers.Add("Referer", "http://movies.yahoo.com/");
                         }
 
                         Client.DownloadFile(downloadURL, downloadPath + @"\" + fileName);
@@ -377,8 +379,15 @@ namespace HDTrailersNETDownloader
                             WriteLog("Grab successful");
                     }
 
-                    
+
                     tempBool = true;
+                }
+                catch(Exception e)
+                {
+                    WriteLog("ERROR: " + e.Message);
+                    tempBool = false;
+                    return tempBool;
+                }
                 
                 
             }

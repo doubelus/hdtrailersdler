@@ -35,29 +35,19 @@ namespace HDTrailersNETDownloader
 
         static void Main(string[] args)
         {
-            WriteLog("HD-Trailers.Net Downloader v.6 BETA");
+            WriteLog("HD-Trailers.Net Downloader v.8 BETA");
             WriteLog("CodePlex: http://www.codeplex.com/hdtrailersdler");
             WriteLog("By Brian Charbonneau - blog: http://www.brianssparetime.com");
             WriteLog("Please visit http://www.hd-trailers.net for archives");
             WriteLog("");
+
+         
             
             //Load config values
             Config_Load();
 
 
-            if (VerboseLogging)
-            {
-                WriteLog("Config loaded");
-                string tString = "Quality Preference: " + QualityPreference[0];
-                for (int i = 1; i < QualityPreference.Length; i++)
-                    tString = tString + "," + QualityPreference[i];
-                WriteLog(tString);
 
-                if (UseExclusions)
-                    WriteLog("Using exclusions...");
-                else
-                    WriteLog("Not using exclusions...");
-            }
 
 
             //Delete folders/files if needed
@@ -110,7 +100,11 @@ namespace HDTrailersNETDownloader
 
                             //If download went ok, and we're using exclusions, add to list
                             if (tempBool && UseExclusions)
+                            {
                                 Exclusions.Add(feedItems[i].Title);
+                                if (VerboseLogging)
+                                    WriteLog("Exclusion added");
+                            }
 
                             //Assuming we downloaded the trailer OK and the config has been set to grab posters...
                             if (tempBool && GrabPoster)
@@ -156,6 +150,7 @@ namespace HDTrailersNETDownloader
 
             if (UseExclusions)
             {
+                WriteLog("");
                 //We're using exclusions... write to file for next run
                 if(VerboseLogging)
                     WriteLog("Serializing exclusion list...");
@@ -300,15 +295,39 @@ namespace HDTrailersNETDownloader
                 if (!File.Exists("HD-Trailers.NET Downloader.log"))
                     logFS = new FileStream("HD-Trailers.NET Downloader.log",FileMode.Create);
                 else
-                    logFS = new FileStream("HD-Trailers.NET Downloader.log",FileMode.Open);
+                    logFS = new FileStream("HD-Trailers.NET Downloader.log",FileMode.Append);
 
                 sw = new StreamWriter(logFS);                
             }
 
+
+            if (VerboseLogging)
+            {
+                WriteLog("Config loaded");
+                string tString = "Quality Preference: " + QualityPreference[0];
+                for (int i = 1; i < QualityPreference.Length; i++)
+                    tString = tString + "," + QualityPreference[i];
+                WriteLog(tString);
+
+
+            }
+
             if (UseExclusions)
             {
+                if(VerboseLogging)
+                WriteLog("Using exclusions...");
+                
                 GetExclusions();
+                
+                if(VerboseLogging)
+                WriteLog(Exclusions.Count.ToString() + " exclusions loaded.");
             }
+            else
+            {
+                if(VerboseLogging)
+                WriteLog("Not using exclusions...");
+            }
+            WriteLog("");
 
 
 

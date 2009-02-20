@@ -60,7 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="HD-Trailers.Net Downloader Exclusions.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

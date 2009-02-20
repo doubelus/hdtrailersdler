@@ -30,6 +30,7 @@ namespace HDTrailersNETDownloader
         static int KeepFor;
         static FileStream logFS;
         static StreamWriter sw;
+        static string pathsep = Path.DirectorySeparatorChar.ToString();
 
         #endregion
 
@@ -73,10 +74,7 @@ namespace HDTrailersNETDownloader
 
                     if (tempTrailerURL != null && !Exclusions.Contains(feedItems[i].Title))
                     {
-                        //if(GrabPoster)
-                        //{
-                        //    string tempPosterURL = GetPosterURL(feedItems[i].Link);
-                        //}
+
                         bool tempBool;
 
                         if (VerboseLogging)
@@ -90,13 +88,13 @@ namespace HDTrailersNETDownloader
                         {
                             bool tempDirectoryCreated = false;
 
-                            if (!Directory.Exists(DownloadFolder + @"\" + feedItems[i].Title.Replace(":", "")))
+                            if (!Directory.Exists(DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "")))
                             {
                                 tempDirectoryCreated = true;
-                                Directory.CreateDirectory(DownloadFolder + @"\" + feedItems[i].Title.Replace(":", ""));
+                                Directory.CreateDirectory(DownloadFolder + pathsep + feedItems[i].Title.Replace(":", ""));
                             }
 
-                            tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title, DownloadFolder + @"\" + feedItems[i].Title.Replace(":", "") + @"\");
+                            tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title, DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "") + pathsep);
 
                             //If download went ok, and we're using exclusions, add to list
                             if (tempBool && UseExclusions)
@@ -108,21 +106,21 @@ namespace HDTrailersNETDownloader
 
                             //Assuming we downloaded the trailer OK and the config has been set to grab posters...
                             if (tempBool && GrabPoster)
-                                GetPoster(CurrentSource, DownloadFolder + @"\" + feedItems[i].Title.Replace(":", "") + @"\");
+                                GetPoster(CurrentSource, DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "") + pathsep);
 
                             //Delete the directory if it didn't download
                             if (tempBool == false && tempDirectoryCreated == true)
-                                Directory.Delete(DownloadFolder + @"\" + feedItems[i].Title.Replace(":", ""));
+                                Directory.Delete(DownloadFolder + pathsep + feedItems[i].Title.Replace(":", ""));
 
                         }
                         else
                         {
                             //Uncomment and remove when done debugging
-                            tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title.Replace(":", ""), DownloadFolder + @"\");
+                            tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title.Replace(":", ""), DownloadFolder + pathsep);
                             //tempBool = true;
                             //Assuming we downloaded the trailer OK and the config has been set to grab posters...
                             if (tempBool && GrabPoster)
-                                GetPoster(CurrentSource, DownloadFolder + @"\");
+                                GetPoster(CurrentSource, DownloadFolder + pathsep);
 
                         }
 
@@ -203,11 +201,24 @@ namespace HDTrailersNETDownloader
 
         static RssItems GetFeedItems(string url)
         {
+            try
+            {
 
-            RssReader reader = new RssReader();
-            RssFeed feed = reader.Retrieve(url);
+                RssReader reader = new RssReader();
+                RssFeed feed = reader.Retrieve(url);
 
-            return feed.Items;
+                return feed.Items;
+               
+            }
+            catch (Exception e)
+            {
+                WriteLog("ERROR: Could not get feed. Exception to follow.");
+                WriteLog(e.Message);
+
+                return null;
+
+            }
+            
 
         }
 
@@ -233,6 +244,7 @@ namespace HDTrailersNETDownloader
 
                 // Sample link: [0] = "<a href=\"http://movies.apple.com/movies/magnolia_pictures/twolovers/twolovers-clip_h480p.mov\">480p</a>"
                 string[] tempStringArray = tempString.Split(new Char[] { ',' });
+                
 
                 NameValueCollection nvc = new NameValueCollection(tempStringArray.Length);
 
@@ -377,7 +389,7 @@ namespace HDTrailersNETDownloader
                 fileName = trailerTitle + "_" + CurrentQualityPreference + ".mov";
 
             
-            if (!File.Exists(downloadPath + @"\" + fileName))
+            if (!File.Exists(downloadPath + pathsep + fileName))
             {
 
                 try
@@ -392,7 +404,7 @@ namespace HDTrailersNETDownloader
                             Client.Headers.Add("Referer", "http://movies.yahoo.com/");
                         }
 
-                        Client.DownloadFile(downloadURL, downloadPath + @"\" + fileName);
+                        Client.DownloadFile(downloadURL, downloadPath + pathsep + fileName);
 
                         if (VerboseLogging)
                             WriteLog("Grab successful");

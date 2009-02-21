@@ -36,7 +36,7 @@ namespace HDTrailersNETDownloader
 
         static void Main(string[] args)
         {
-            WriteLog("HD-Trailers.Net Downloader v.8 BETA");
+            WriteLog("HD-Trailers.Net Downloader v.81 BETA");
             WriteLog("CodePlex: http://www.codeplex.com/hdtrailersdler");
             WriteLog("By Brian Charbonneau - blog: http://www.brianssparetime.com");
             WriteLog("Please visit http://www.hd-trailers.net for archives");
@@ -96,13 +96,7 @@ namespace HDTrailersNETDownloader
 
                             tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title, DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "") + pathsep);
 
-                            //If download went ok, and we're using exclusions, add to list
-                            if (tempBool && UseExclusions)
-                            {
-                                Exclusions.Add(feedItems[i].Title);
-                                if (VerboseLogging)
-                                    WriteLog("Exclusion added");
-                            }
+
 
                             //Assuming we downloaded the trailer OK and the config has been set to grab posters...
                             if (tempBool && GrabPoster)
@@ -122,6 +116,14 @@ namespace HDTrailersNETDownloader
                             if (tempBool && GrabPoster)
                                 GetPoster(CurrentSource, DownloadFolder + pathsep);
 
+                        }
+
+                        //If download went ok, and we're using exclusions, add to list
+                        if (tempBool && UseExclusions)
+                        {
+                            Exclusions.Add(feedItems[i].Title);
+                            if (VerboseLogging)
+                                WriteLog("Exclusion added");
                         }
 
                         if (tempBool)
@@ -477,20 +479,25 @@ namespace HDTrailersNETDownloader
 
         static void WriteLog(string text)
         {
-            if (text != "")
+            try
             {
-                Console.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + " - " + text);
+                if (text != "")
+                {
+                    Console.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + " - " + text);
 
-                if(PhysicalLog)
-                    sw.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + " - " + text);
-            }
-            else
-            {
-                Console.WriteLine();
+                    if (PhysicalLog)
+                        sw.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + " - " + text);
+                }
+                else
+                {
+                    Console.WriteLine();
 
-                if(PhysicalLog)
-                    sw.WriteLine();
+                    if (PhysicalLog)
+                        sw.WriteLine();
+                }
             }
+            catch (Exception e)
+            { }
 
 
         }

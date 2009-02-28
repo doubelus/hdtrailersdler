@@ -8,6 +8,8 @@ using System.IO;
 using System.Collections.Specialized;
 using System.Configuration;
 using System.Collections;
+using System.Net.Mail;
+
 
 namespace HDTrailersNETDownloader
 {
@@ -26,17 +28,23 @@ namespace HDTrailersNETDownloader
         static bool PhysicalLog;
         static bool PauseWhenDone;
         static bool UseExclusions;
+        static string EmailAddress;
+        static string SMTPServer;
+        static bool EmailSummary;
         static ArrayList Exclusions = new ArrayList();
         static int KeepFor;
         static FileStream logFS;
         static StreamWriter sw;
         static string pathsep = Path.DirectorySeparatorChar.ToString();
+        static string MailBody;
+        static string Version = "HD-Trailers.Net Downloader v.82 BETA";
+        
 
         #endregion
 
         static void Main(string[] args)
         {
-            WriteLog("HD-Trailers.Net Downloader v.81 BETA");
+            WriteLog(Version);
             WriteLog("CodePlex: http://www.codeplex.com/hdtrailersdler");
             WriteLog("By Brian Charbonneau - blog: http://www.brianssparetime.com");
             WriteLog("Please visit http://www.hd-trailers.net for archives");
@@ -122,23 +130,36 @@ namespace HDTrailersNETDownloader
                         if (tempBool && UseExclusions)
                         {
                             Exclusions.Add(feedItems[i].Title);
+                            
                             if (VerboseLogging)
                                 WriteLog("Exclusion added");
                         }
 
                         if (tempBool)
+                        {
                             WriteLog(feedItems[i].Title + " (" + CurrentQualityPreference + ") : Downloaded");
+
+                            if (EmailAddress != null)
+                                AddToEmailSummary((i+1).ToString() + ". " + feedItems[i].Title + " (" + CurrentQualityPreference + ") : Downloaded");
+
+                        }
 
                     }
                     else
                     {
                         if (tempTrailerURL == null)
+                        {
                             WriteLog("Preferred quality not available. Skipping...");
+                            AddToEmailSummary((i + 1).ToString() + ". " + feedItems[i].Title + " (" + CurrentQualityPreference + ") : Not available. Skipping...");
+                        }
                         else if (Exclusions.Contains(feedItems[i].Title))
+                        {
                             WriteLog("Title found in exclusions list. Skipping...");
+                            AddToEmailSummary((i + 1).ToString() + ". " + feedItems[i].Title + " (" + CurrentQualityPreference + ") : Title found in exclusions list. Skipping...");
+                        }
 
                     }
-                    //}
+                    
                 }
             }
             catch (Exception e)
@@ -148,16 +169,41 @@ namespace HDTrailersNETDownloader
 
             }
 
-            if (UseExclusions)
+            //Do housekeeping like serializing exclusions and sending email summary
+            if (VerboseLogging)
             {
                 WriteLog("");
+                WriteLog("Housekeeping:");
+
+            }
+
+            if (UseExclusions)
+            {
+                
                 //We're using exclusions... write to file for next run
-                if(VerboseLogging)
+                if (VerboseLogging)
+                {
+                    WriteLog("");
                     WriteLog("Serializing exclusion list...");
+                }
                 WriteExclusions();
 
                 if(VerboseLogging)
-                    WriteLog("Serialization Complete.");
+                    WriteLog("Serialization complete.");
+            }
+
+            if (EmailSummary)
+            {
+                if (VerboseLogging)
+                {
+                    WriteLog("");
+                    WriteLog("Sending email summary...");
+                }
+               
+                SendEmailSummary();
+
+                if(VerboseLogging)
+                    WriteLog("Email summary sent.");
             }
             
             WriteLog("Done");
@@ -278,7 +324,8 @@ namespace HDTrailersNETDownloader
             }
             catch
             {
-                WriteLog("Something is weird with this one... check source");
+                WriteLog("ERROR: Something is weird with this one... check source");
+                //AddToEmailSummary("ERROR: Something is weird with this one... check source");
                 return null;
             }
 
@@ -302,6 +349,10 @@ namespace HDTrailersNETDownloader
             PauseWhenDone = Convert.ToBoolean(ConfigurationManager.AppSettings["PauseWhenDone"]);
             KeepFor = Convert.ToInt32(ConfigurationManager.AppSettings["KeepFor"]);
             UseExclusions = Convert.ToBoolean(ConfigurationManager.AppSettings["UseExclusions"]);
+            EmailAddress = ConfigurationManager.AppSettings["EmailAddress"];
+            EmailSummary = Convert.ToBoolean(ConfigurationManager.AppSettings["EmailSummary"]);
+            SMTPServer = ConfigurationManager.AppSettings["SMTPServer"];
+
             
 
             if (PhysicalLog)
@@ -483,10 +534,10 @@ namespace HDTrailersNETDownloader
             {
                 if (text != "")
                 {
-                    Console.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + " - " + text);
+                    Console.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString() + " - " + text);
 
                     if (PhysicalLog)
-                        sw.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + " - " + text);
+                        sw.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString() + " - " + text);
                 }
                 else
                 {
@@ -498,6 +549,47 @@ namespace HDTrailersNETDownloader
             }
             catch (Exception e)
             { }
+
+
+        }
+
+        static void AddToEmailSummary(string text)
+        {
+
+            MailBody = MailBody + "\r\n" + text;
+
+
+        }
+
+        static void SendEmailSummary()
+        {
+
+            try
+            {
+                // To
+                MailMessage mailMsg = new MailMessage();
+                mailMsg.To.Add(EmailAddress);
+
+                // From
+                MailAddress mailAddress = new MailAddress("fake_addr@trailers.com","HD-Trailer.NET Downloader");
+                mailMsg.From = mailAddress;
+
+                // Subject and Body
+                mailMsg.Subject = Version + " Download Summary for " + DateTime.Now.ToShortDateString();
+                mailMsg.Body = MailBody;
+
+                // Init SmtpClient and send
+                SmtpClient smtpClient = new SmtpClient(SMTPServer, 25);
+                //System.Net.NetworkCredential credentials = new System.Net.NetworkCredential(args[5], args[5]);
+                //smtpClient.Credentials = credentials;
+
+                smtpClient.Send(mailMsg);
+            }
+            catch (Exception ex)
+            {
+                WriteLog("ERROR: " + ex.Message);
+            }
+
 
 
         }

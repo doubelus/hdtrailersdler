@@ -37,7 +37,7 @@ namespace HDTrailersNETDownloader
         static StreamWriter sw;
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
-        static string Version = "HD-Trailers.Net Downloader v.83 BETA";
+        static string Version = "HD-Trailers.Net Downloader v.82 BETA";
         
 
         #endregion

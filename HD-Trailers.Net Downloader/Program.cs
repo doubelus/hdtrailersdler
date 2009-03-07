@@ -96,29 +96,29 @@ namespace HDTrailersNETDownloader
                         {
                             bool tempDirectoryCreated = false;
 
-                            if (!Directory.Exists(DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "")))
+                            if (!Directory.Exists(DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?","")))
                             {
                                 tempDirectoryCreated = true;
-                                Directory.CreateDirectory(DownloadFolder + pathsep + feedItems[i].Title.Replace(":", ""));
+                                Directory.CreateDirectory(DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?",""));
                             }
 
-                            tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title, DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "") + pathsep);
+                            tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title, DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?","") + pathsep);
 
 
 
                             //Assuming we downloaded the trailer OK and the config has been set to grab posters...
                             if (tempBool && GrabPoster)
-                                GetPoster(CurrentSource, DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "") + pathsep);
+                                GetPoster(CurrentSource, DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?","") + pathsep);
 
                             //Delete the directory if it didn't download
                             if (tempBool == false && tempDirectoryCreated == true)
-                                Directory.Delete(DownloadFolder + pathsep + feedItems[i].Title.Replace(":", ""));
+                                Directory.Delete(DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?",""));
 
                         }
                         else
                         {
                             //Uncomment and remove when done debugging
-                            tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title.Replace(":", ""), DownloadFolder + pathsep);
+                            tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title.Replace(":", "").Replace("?",""), DownloadFolder + pathsep);
                             //tempBool = true;
                             //Assuming we downloaded the trailer OK and the config has been set to grab posters...
                             if (tempBool && GrabPoster)
@@ -429,7 +429,7 @@ namespace HDTrailersNETDownloader
                 WriteLog("DownloadPath = " + downloadPath);
 
             bool tempBool = false;
-            trailerTitle = trailerTitle.Replace(":", "");
+            trailerTitle = trailerTitle.Replace(":", "").Replace("?","");
 
             //Make this work for .WMV and .MOV. Add more later as needed
             string fileName;

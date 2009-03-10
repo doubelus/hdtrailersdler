@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("TrailerSnatch")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("HD-Trailers.NET Downloader")]
+[assembly: AssemblyDescription("Downloads Hi-Def Movie Trailers")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("TrailerSnatch")]
+[assembly: AssemblyProduct("HD-Trailers.NET Downloader")]
 [assembly: AssemblyCopyright("Copyright ©  2009")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

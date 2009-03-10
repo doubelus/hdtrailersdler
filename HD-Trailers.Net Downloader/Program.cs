@@ -20,7 +20,8 @@ namespace HDTrailersNETDownloader
         static string[] QualityPreference;
         static string CurrentQualityPreference;
         static string CurrentSource;
-        static string DownloadFolder;
+        static string TrailerDownloadFolder;
+        static string MetadataDownloadFolder;
         static string AllorToday;
         static bool GrabPoster;
         static bool CreateFolder;
@@ -37,7 +38,7 @@ namespace HDTrailersNETDownloader
         static StreamWriter sw;
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
-        static string Version = "HD-Trailers.Net Downloader v.82 BETA";
+        static string Version = "HD-Trailers.Net Downloader v.83 BETA";
         
 
         #endregion
@@ -96,33 +97,37 @@ namespace HDTrailersNETDownloader
                         {
                             bool tempDirectoryCreated = false;
 
-                            if (!Directory.Exists(DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?","")))
+                            if (!Directory.Exists(TrailerDownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?","")))
                             {
                                 tempDirectoryCreated = true;
-                                Directory.CreateDirectory(DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?",""));
+                                Directory.CreateDirectory(TrailerDownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?",""));
                             }
 
-                            tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title, DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?","") + pathsep);
+                            //tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title, TrailerDownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?","") + pathsep);
+                            tempBool = GetOrResumeTrailer(tempTrailerURL, feedItems[i].Title, TrailerDownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?", "") + pathsep);
 
 
 
                             //Assuming we downloaded the trailer OK and the config has been set to grab posters...
                             if (tempBool && GrabPoster)
-                                GetPoster(CurrentSource, DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?","") + pathsep);
+                                GetPoster(CurrentSource, TrailerDownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?","") + pathsep);
 
                             //Delete the directory if it didn't download
                             if (tempBool == false && tempDirectoryCreated == true)
-                                Directory.Delete(DownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?",""));
+                                Directory.Delete(TrailerDownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?",""));
 
                         }
                         else
                         {
                             //Uncomment and remove when done debugging
-                            tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title.Replace(":", "").Replace("?",""), DownloadFolder + pathsep);
+                            //tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title.Replace(":", "").Replace("?",""), TrailerDownloadFolder + pathsep);
+                            tempBool = GetOrResumeTrailer(tempTrailerURL, feedItems[i].Title.Replace(":", "").Replace("?", ""), TrailerDownloadFolder + pathsep);
+
+
                             //tempBool = true;
                             //Assuming we downloaded the trailer OK and the config has been set to grab posters...
                             if (tempBool && GrabPoster)
-                                GetPoster(CurrentSource, DownloadFolder + pathsep);
+                                GetPoster(CurrentSource, TrailerDownloadFolder + pathsep);
 
                         }
 
@@ -221,7 +226,7 @@ namespace HDTrailersNETDownloader
             if (KeepFor > 0)
             {
                 WriteLog("Delete option selected. Deleting files/folders older than: " + KeepFor.ToString() + " days");
-                string[] dirList = (string[])Directory.GetDirectories(DownloadFolder);
+                string[] dirList = (string[])Directory.GetDirectories(TrailerDownloadFolder);
 
                 for (int i = 0; i < dirList.Length; i++)
                 {
@@ -234,7 +239,7 @@ namespace HDTrailersNETDownloader
 
                 }
 
-                string[] fileList = (string[])Directory.GetFiles(DownloadFolder);
+                string[] fileList = (string[])Directory.GetFiles(TrailerDownloadFolder);
                 for (int i = 0; i < fileList.Length; i++)
                 {
                     if ((File.GetCreationTime(fileList[i]).AddDays(KeepFor)) < DateTime.Now && !fileList[i].Contains("folder"))
@@ -340,7 +345,8 @@ namespace HDTrailersNETDownloader
             // Get the AppSettings section.
 
             QualityPreference = ConfigurationManager.AppSettings["QualityPreference"].Split(new Char[] { ',' });
-            DownloadFolder = ConfigurationManager.AppSettings["DownloadFolder"];
+            TrailerDownloadFolder = ConfigurationManager.AppSettings["TrailerDownloadFolder"];
+            MetadataDownloadFolder = ConfigurationManager.AppSettings["MetadataDownloadFolder"];
             AllorToday = ConfigurationManager.AppSettings["AllorToday"];
             GrabPoster = Convert.ToBoolean(ConfigurationManager.AppSettings["GrabPoster"]);
             CreateFolder = Convert.ToBoolean(ConfigurationManager.AppSettings["CreateFolder"]);
@@ -483,7 +489,154 @@ namespace HDTrailersNETDownloader
             return tempBool;
             
         }
+        static bool GetOrResumeTrailer(string downloadURL, string trailerTitle, string downloadPath)
+        {
+            HttpWebRequest webRequest;
+            HttpWebResponse webResponse;
+            FileStream strLocal;
+            Stream strResponse;
+            bool tempBool = false;
 
+            int StartPointInt;
+
+            if (VerboseLogging)
+            WriteLog("Trailer DownloadPath = " + downloadPath);
+
+
+            trailerTitle = trailerTitle.Replace(":", "").Replace("?", "");
+
+            //Make this work for .WMV and .MOV. Add more later as needed
+            string fileName;
+
+            if (downloadURL.Contains(".wmv"))
+                fileName = trailerTitle + "_" + CurrentQualityPreference + ".wmv";
+            else if (downloadURL.Contains(".zip"))
+                fileName = trailerTitle + "_" + CurrentQualityPreference + ".zip";
+            else
+                fileName = trailerTitle + "_" + CurrentQualityPreference + ".mov";
+
+            if (File.Exists(downloadPath + pathsep + fileName))
+            {
+                FileInfo fi = new FileInfo(downloadPath + pathsep + fileName);
+                StartPointInt = Convert.ToInt32(fi.Length);
+            }
+            else
+                StartPointInt = 0;
+
+
+                //Get the size of file on webserver
+                HttpWebResponse webResponseTemp;
+                HttpWebRequest webRequestTemp;
+
+                webRequestTemp = (HttpWebRequest)WebRequest.Create(downloadURL);
+                webResponseTemp = (HttpWebResponse)webRequestTemp.GetResponse();
+
+                // Ask the server for the file size and store it
+
+                int fileSize = Convert.ToInt32(webResponseTemp.ContentLength);
+
+
+
+            if(StartPointInt < fileSize)
+            {
+
+
+                // Create a request to the file we are downloading
+
+                webRequest = (HttpWebRequest)WebRequest.Create(downloadURL);
+
+                if (StartPointInt != 0)
+                {
+                    //Add point to start from
+                    webRequest.AddRange(StartPointInt, fileSize);
+
+                }
+
+
+                //// Set default authentication for retrieving the file
+
+                webRequest.Credentials = CredentialCache.DefaultCredentials;
+
+                // Retrieve the response from the server
+
+                webResponse = (HttpWebResponse)webRequest.GetResponse();
+
+
+                // Open the URL for download
+
+                strResponse = webResponse.GetResponseStream();
+
+         
+
+                // Create a new file stream where we will be saving the data (local drive)
+
+                if (StartPointInt == 0)
+                {
+
+                    strLocal = new FileStream(downloadPath + pathsep + fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+
+                }
+
+                else
+                {
+                    if (webResponse.StatusCode == HttpStatusCode.PartialContent)
+                        WriteLog(StartPointInt.ToString() + " bytes of " + Convert.ToInt32(fileSize).ToString() + " located on disk. Resuming...");
+                    else
+                        WriteLog(StartPointInt.ToString() + " bytes of " + Convert.ToInt32(fileSize).ToString() + " located on disk. Server will not resume!!");
+
+
+                    strLocal = new FileStream(downloadPath + pathsep + fileName, FileMode.Append, FileAccess.Write, FileShare.None);
+
+                }
+
+
+
+                // It will store the current number of bytes we retrieved from the server
+
+                int bytesSize = 0;
+
+                // A buffer for storing and writing the data retrieved from the server
+
+                byte[] downBuffer = new byte[2048];
+
+
+
+                // Loop through the buffer until the buffer is empty
+
+                while ((bytesSize = strResponse.Read(downBuffer, 0, downBuffer.Length)) > 0)
+                {
+
+                    // Write the data from the buffer to the local hard drive
+
+                    strLocal.Write(downBuffer, 0, bytesSize);
+
+                }
+
+                // When the above code has ended, close the streams
+
+                strResponse.Close();
+
+                strLocal.Close();
+
+                tempBool = true;
+            }
+            else if (StartPointInt == Convert.ToInt32(fileSize))
+            {
+                tempBool = false;
+                WriteLog("File exists and is same size. Skipping...");
+            }
+            else
+            {
+                tempBool = false;
+                WriteLog("Something else is wrong.. size on disk is greater than size on web.");
+            }
+
+                return tempBool;
+
+            }
+
+
+        
         static void GetPoster(string source, string downloadPath)
         {
 

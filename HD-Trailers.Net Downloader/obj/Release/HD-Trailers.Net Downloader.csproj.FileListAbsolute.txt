@@ -6,3 +6,9 @@ C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\
 C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.config
 C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\bin\Release\RssReader.dll
 C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader Exclusions.xml
+C:\work\HDtrailer\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
+C:\work\HDtrailer\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
+C:\work\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.config
+C:\work\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
+C:\work\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
+C:\work\HDtrailer\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache

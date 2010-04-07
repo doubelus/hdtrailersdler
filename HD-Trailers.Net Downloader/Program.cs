@@ -6,250 +6,264 @@ using Sloppycode.net;
 using System.Net;
 using System.IO;
 using System.Collections.Specialized;
-using System.Configuration;
 using System.Collections;
 using System.Net.Mail;
+using System.Globalization;
 
 
 namespace HDTrailersNETDownloader
 {
     class Program
     {
-        #region setup variables
-        static RssItems feedItems;
-        static string[] QualityPreference;
-        static string CurrentQualityPreference;
-        static string CurrentSource;
-        static string TrailerDownloadFolder;
-        static string MetadataDownloadFolder;
-        static string AllorToday;
-        static bool GrabPoster;
-        static bool CreateFolder;
-        static bool VerboseLogging;
-        static bool PhysicalLog;
-        static bool PauseWhenDone;
-        static bool UseExclusions;
-        static string EmailAddress;
-        static string SMTPServer;
-        static bool EmailSummary;
+
+        static Config config = new Config();
+        static Logging log = new Logging();
         static ArrayList Exclusions = new ArrayList();
-        static int KeepFor;
-        static FileStream logFS;
-        static StreamWriter sw;
+
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
-        static string Version = "HD-Trailers.Net Downloader v.83 BETA";
-        
+        static string Version = "HD-Trailers.Net Downloader v.89 BETA";
 
-        #endregion
 
-        static void Main(string[] args)
+
+        /// <summary>
+        /// read data from appconfig. configure the logging object according to the appconfig information
+        /// </summary>
+        static void Init()
         {
-            WriteLog(Version);
-            WriteLog("CodePlex: http://www.codeplex.com/hdtrailersdler");
-            WriteLog("By Brian Charbonneau - blog: http://www.brianssparetime.com");
-            WriteLog("Please visit http://www.hd-trailers.net for archives");
-            WriteLog("");
+            config.Init();
+            log.Init(config.VerboseLogging, config.PhysicalLog);
 
-         
-            
-            //Load config values
-            Config_Load();
+            log.VerboseWrite("Config loaded");
+            log.VerboseWrite(config.Info());
 
-
-
-
-
-            //Delete folders/files if needed
-            DeleteEm();
-
-            feedItems = GetFeedItems(@"http://www.hd-trailers.net/blog/feed/");
-
-            if (VerboseLogging)
-                WriteLog("RSS feed items (" + feedItems.Count.ToString() + ") grabbed successfully");
-
-            try
+            if (config.UseExclusions)
             {
-                for (int i = 0; i < feedItems.Count; i++)
-                {
-                    //Add code to select day
-                    //if (Convert.ToDateTime(feedItems[i].Pubdate) > DateTime.Now.AddDays(-15))
-                    //{
-                    WriteLog("");
-                    WriteLog("Next trailer (" + Convert.ToString(i + 1) + ") is : " + feedItems[i].Title);
+                log.VerboseWrite("Using exclusions...");
 
-                    //Will come back null if preferred quality is not available
-                    string tempTrailerURL = GetDownloadURL(feedItems[i].Link, QualityPreference);
+                Exclusions = ReadExclusions();
 
-                    if (tempTrailerURL != null && !Exclusions.Contains(feedItems[i].Title))
-                    {
-
-                        bool tempBool;
-
-                        if (VerboseLogging)
-                        {
-                            WriteLog("Extracted download url (" + CurrentQualityPreference + ") for " + feedItems[i].Title + ":");
-                            WriteLog(tempTrailerURL);
-                        }
-
-
-                        if (CreateFolder)
-                        {
-                            bool tempDirectoryCreated = false;
-
-                            if (!Directory.Exists(TrailerDownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?","")))
-                            {
-                                tempDirectoryCreated = true;
-                                Directory.CreateDirectory(TrailerDownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?",""));
-                            }
-
-                            //tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title, TrailerDownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?","") + pathsep);
-                            tempBool = GetOrResumeTrailer(tempTrailerURL, feedItems[i].Title, TrailerDownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?", "") + pathsep);
-
-
-
-                            //Assuming we downloaded the trailer OK and the config has been set to grab posters...
-                            if (tempBool && GrabPoster)
-                                GetPoster(CurrentSource, TrailerDownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?","") + pathsep);
-
-                            //Delete the directory if it didn't download
-                            if (tempBool == false && tempDirectoryCreated == true)
-                                Directory.Delete(TrailerDownloadFolder + pathsep + feedItems[i].Title.Replace(":", "").Replace("?",""));
-
-                        }
-                        else
-                        {
-                            //Uncomment and remove when done debugging
-                            //tempBool = GetTrailer(tempTrailerURL, feedItems[i].Title.Replace(":", "").Replace("?",""), TrailerDownloadFolder + pathsep);
-                            tempBool = GetOrResumeTrailer(tempTrailerURL, feedItems[i].Title.Replace(":", "").Replace("?", ""), TrailerDownloadFolder + pathsep);
-
-
-                            //tempBool = true;
-                            //Assuming we downloaded the trailer OK and the config has been set to grab posters...
-                            if (tempBool && GrabPoster)
-                                GetPoster(CurrentSource, TrailerDownloadFolder + pathsep);
-
-                        }
-
-                        //If download went ok, and we're using exclusions, add to list
-                        if (tempBool && UseExclusions)
-                        {
-                            Exclusions.Add(feedItems[i].Title);
-                            
-                            if (VerboseLogging)
-                                WriteLog("Exclusion added");
-                        }
-
-                        if (tempBool)
-                        {
-                            WriteLog(feedItems[i].Title + " (" + CurrentQualityPreference + ") : Downloaded");
-
-                            if (EmailAddress != null)
-                                AddToEmailSummary((i+1).ToString() + ". " + feedItems[i].Title + " (" + CurrentQualityPreference + ") : Downloaded");
-
-                        }
-
-                    }
-                    else
-                    {
-                        if (tempTrailerURL == null)
-                        {
-                            WriteLog("Preferred quality not available. Skipping...");
-                            AddToEmailSummary((i + 1).ToString() + ". " + feedItems[i].Title + " (" + CurrentQualityPreference + ") : Not available. Skipping...");
-                        }
-                        else if (Exclusions.Contains(feedItems[i].Title))
-                        {
-                            WriteLog("Title found in exclusions list. Skipping...");
-                            AddToEmailSummary((i + 1).ToString() + ". " + feedItems[i].Title + " (" + CurrentQualityPreference + ") : Title found in exclusions list. Skipping...");
-                        }
-
-                    }
-                    
-                }
+                log.VerboseWrite(Exclusions.Count.ToString() + " exclusions loaded.");
             }
-            catch (Exception e)
+            else
             {
-                WriteLog("ERROR: " + e.Message);
-                sw.Dispose();
-
+                log.VerboseWrite("Not using exclusions...");
             }
+            log.WriteLine("");
+        }
 
-            //Do housekeeping like serializing exclusions and sending email summary
-            if (VerboseLogging)
+        static ArrayList ReadExclusions()
+        {
+            ArrayList exclusions;
+
+            //We are using exclusions. Load into arraylist or create empty arraylist
+            if (File.Exists("HD-Trailers.Net Downloader Exclusions.xml"))
             {
-                WriteLog("");
-                WriteLog("Housekeeping:");
-
+                System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(ArrayList));
+                System.IO.TextReader reader =
+                  new System.IO.StreamReader("HD-Trailers.Net Downloader Exclusions.xml");
+                exclusions = (ArrayList)serializer.Deserialize(reader);
+                reader.Close();
             }
+            else
+                exclusions = new ArrayList();
 
-            if (UseExclusions)
-            {
-                
-                //We're using exclusions... write to file for next run
-                if (VerboseLogging)
-                {
-                    WriteLog("");
-                    WriteLog("Serializing exclusion list...");
-                }
-                WriteExclusions();
+            return exclusions;
+        }
 
-                if(VerboseLogging)
-                    WriteLog("Serialization complete.");
-            }
-
-            if (EmailSummary)
-            {
-                if (VerboseLogging)
-                {
-                    WriteLog("");
-                    WriteLog("Sending email summary...");
-                }
-               
-                SendEmailSummary();
-
-                if(VerboseLogging)
-                    WriteLog("Email summary sent.");
-            }
-            
-            WriteLog("Done");
-
-            if(PauseWhenDone)
-                Console.ReadLine();
-
-            sw.Dispose();
-
+        static void WriteExclusions(ArrayList exclusions)
+        {
+            System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(ArrayList));
+            System.IO.TextWriter writer = new System.IO.StreamWriter("HD-Trailers.Net Downloader Exclusions.xml", false);
+            serializer.Serialize(writer, exclusions);
+            writer.Close();
         }
 
         static void DeleteEm()
         {
             //Delete old trailers. If KeepFor = 0 ignore
-            if (KeepFor > 0)
+            if (config.KeepFor > 0)
             {
-                WriteLog("Delete option selected. Deleting files/folders older than: " + KeepFor.ToString() + " days");
-                string[] dirList = (string[])Directory.GetDirectories(TrailerDownloadFolder);
-
-                for (int i = 0; i < dirList.Length; i++)
+                try
                 {
-                    if ((Directory.GetCreationTime(dirList[i]).AddDays(KeepFor)) < DateTime.Now)
+                    log.WriteLine("Delete option selected. Deleting files/folders older than: " + config.KeepFor.ToString() + " days");
+                    string[] dirList = (string[])Directory.GetDirectories(config.TrailerDownloadFolder);
+
+                    for (int i = 0; i < dirList.Length; i++)
                     {
-                        Directory.Delete(dirList[i], true);
-                        if (VerboseLogging)
-                            WriteLog("Deleted directory: " + dirList[i]);
+                        if ((Directory.GetCreationTime(dirList[i]).AddDays(config.KeepFor)) < DateTime.Now)
+                        {
+                            Directory.Delete(dirList[i], true);
+                            if (config.VerboseLogging)
+                                log.WriteLine("Deleted directory: " + dirList[i]);
+                        }
                     }
 
+                    string[] fileList = (string[])Directory.GetFiles(config.TrailerDownloadFolder);
+                    for (int i = 0; i < fileList.Length; i++)
+                    {
+                        if ((File.GetCreationTime(fileList[i]).AddDays(config.KeepFor)) < DateTime.Now && !fileList[i].Contains("folder"))
+                        {
+                            File.Delete(fileList[i]);
+                            if (config.VerboseLogging)
+                                log.WriteLine("Deleted file: " + fileList[i]);
+                        }
+                    }
                 }
-
-                string[] fileList = (string[])Directory.GetFiles(TrailerDownloadFolder);
-                for (int i = 0; i < fileList.Length; i++)
+                catch (Exception e)
                 {
-                    if ((File.GetCreationTime(fileList[i]).AddDays(KeepFor)) < DateTime.Now && !fileList[i].Contains("folder"))
-                    {
-                        File.Delete(fileList[i]);
-                        if (VerboseLogging)
-                            WriteLog("Deleted file: " + fileList[i]);
-                    }
+                    log.WriteLine("Error deleting subdirectories");
+                    log.WriteLine("Exception: " + e.ToString());
                 }
             }
+            return;
+        }
+
+        static void ProcessFeedItem(string title, string link)
+        {
+            string qualPreference = "";
+
+            log.WriteLine("");
+            log.WriteLine("Next trailer: " + title);
+
+            NameValueCollection nvc;
+            nvc = GetDownloadUrls(link);
+            if ((nvc == null) || (nvc.Count == 0))
+            {
+                log.WriteLine("Error: No Download URLs found. Skipping...");
+                return;
+            }
+
+            if (config.VerboseLogging)
+            {
+                for (int j = 0; j < nvc.Count; j++)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendFormat("    {0,-10} {1}", nvc.GetKey(j), nvc.Get(j));
+                    log.VerboseWrite(sb.ToString());
+                }
+            }
+
+            string tempTrailerURL = GetPreferredURL(nvc, config.QualityPreference, ref qualPreference);
+
+            if (tempTrailerURL == null)
+            {
+                log.WriteLine("Preferred quality not available. Skipping...");
+                AddToEmailSummary(title + " (" + qualPreference + ") : Not available. Skipping...");
+                return;
+            }
+            if (Exclusions.Contains(title))
+            {
+                log.WriteLine("Title found in exclusions list. Skipping...");
+                AddToEmailSummary(title + " (" + qualPreference + ") : Title found in exclusions list. Skipping...");
+                return;
+            }
+            if ((config.TrailerOnly) && (!title.Contains("Trailer")))
+            {
+                log.WriteLine("Title not a trailer. Skipping...");
+                AddToEmailSummary(title + " (" + qualPreference + ") : Title not a trailer. Skipping...");
+                return;
+            }
+
+            bool tempBool;
+            string directory;
+            string fname;
+            string posterUrl = nvc["poster"];
+
+            bool tempDirectoryCreated = false;
+
+            if (config.CreateFolder)
+                directory = config.TrailerDownloadFolder + pathsep + title.Replace(":", "").Replace("?", "");
+            else
+                directory = config.TrailerDownloadFolder;
+            fname = title.Replace(":", "").Replace("?", "");
+
+            log.VerboseWrite("Extracted download url (" + qualPreference + ") for " + title + ": " + tempTrailerURL);
+
+            if ((config.CreateFolder) && (!Directory.Exists(directory)))
+            {
+                tempDirectoryCreated = true;
+                Directory.CreateDirectory(directory);
+            }
+            tempBool = GetOrResumeTrailer(tempTrailerURL, fname, directory + pathsep, qualPreference, posterUrl);
+
+            //Delete the directory if it didn't download
+            if (tempBool == false && tempDirectoryCreated == true)
+                Directory.Delete(directory);
+
+            //If download went ok, and we're using exclusions, add to list
+            if (tempBool && config.UseExclusions)
+            {
+                Exclusions.Add(title);
+                log.VerboseWrite("Exclusion added");
+            }
+
+            if (tempBool)
+            {
+                log.WriteLine(title + " (" + qualPreference + ") : Downloaded");
+                AddToEmailSummary(title + " (" + qualPreference + ") : Downloaded");
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            RssItems feedItems;
+
+            log.WriteLine(Version);
+            log.WriteLine("CodePlex: http://www.codeplex.com/hdtrailersdler");
+            log.WriteLine("By Brian Charbonneau - blog: http://www.brianssparetime.com");
+            log.WriteLine("Please visit http://www.hd-trailers.net for archives");
+            log.WriteLine("");
+
+            Init();
+
+            //Delete folders/files if needed
+            DeleteEm();
+
+            feedItems = GetFeedItems(@"http://www.hd-trailers.net/blog/feed/");
+            log.VerboseWrite("RSS feed items (" + feedItems.Count.ToString() + ") grabbed successfully");
+
+            try
+            {
+                for (int i = 0; i < feedItems.Count; i++)
+                {
+                    ProcessFeedItem(feedItems[i].Title, feedItems[i].Link);
+                }
+            }
+            catch (Exception e)
+            {
+                log.WriteLine("ERROR: " + e.Message);
+            }
+
+            //Do housekeeping like serializing exclusions and sending email summary
+            log.VerboseWrite("");
+            log.VerboseWrite("Housekeeping:");
+
+            if (config.UseExclusions)
+            {
+                //We're using exclusions... write to file for next run
+                log.VerboseWrite("");
+                log.VerboseWrite("Serializing exclusion list...");
+                
+                WriteExclusions(Exclusions);
+
+                log.VerboseWrite("Serialization complete.");
+            }
+
+            if (config.EmailSummary)
+            {
+                log.VerboseWrite("");
+                log.VerboseWrite("Sending email summary...");
+                               
+                SendEmailSummary();
+
+                log.VerboseWrite("Email summary sent.");
+            }
+            
+            log.WriteLine("Done");
+
+            if(config.PauseWhenDone)
+                Console.ReadLine();
         }
 
         static RssItems GetFeedItems(string url)
@@ -261,259 +275,156 @@ namespace HDTrailersNETDownloader
                 RssFeed feed = reader.Retrieve(url);
 
                 return feed.Items;
-               
             }
             catch (Exception e)
             {
-                WriteLog("ERROR: Could not get feed. Exception to follow.");
-                WriteLog(e.Message);
+                log.WriteLine("ERROR: Could not get feed. Exception to follow.");
+                log.WriteLine(e.Message);
 
                 return null;
-
             }
-            
-
         }
 
-        
-        static string GetDownloadURL(string link, string[] quality)
+        static string ReadDataFromLink(string link)
         {
-            #region DumpHTMLSourceToString
-            HttpWebRequest site = (HttpWebRequest)WebRequest.Create(link);
-            HttpWebResponse response = (HttpWebResponse)site.GetResponse();
-            Stream dataStream = response.GetResponseStream();
-            StreamReader read = new StreamReader(dataStream);
-            String data = read.ReadToEnd();
-
-            //Set data to CurrentSource.. will use to pull poster
-            CurrentSource = data;
-            #endregion
-
-
-            #region ExtractDownloadURLsFromSource
             try
             {
-                string tempString = data.Substring(data.IndexOf(@"Download</strong>:") + 18, data.IndexOf(@"</p>", data.IndexOf(@"Download</strong>:")) - data.IndexOf(@"Download</strong>:") - 18);
+                HttpWebRequest site = (HttpWebRequest)WebRequest.Create(link);
+                HttpWebResponse response = (HttpWebResponse)site.GetResponse();
+                Stream dataStream = response.GetResponseStream();
+                StreamReader read = new StreamReader(dataStream);
+                String data = read.ReadToEnd();
 
+                read.Close();
+                dataStream.Close();
+                response.Close();
+                site.Abort();
+
+                return data;
+            }
+            catch (Exception e)
+            {
+                log.WriteLine("Exception in ReadDataFromLink (" + link + ")");
+                log.WriteLine(e.ToString());
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="link"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        static NameValueCollection GetDownloadUrls(string link)
+        {
+            try
+            {
+                NameValueCollection nvc = new NameValueCollection();
+
+                //Set data to CurrentSource.. will use to pull poster
+                string data = ReadDataFromLink(link);
+                // CurrentSource = data;
+
+                int pos = data.IndexOf(@"Download</strong>:");
+                if (pos == -1)
+                    return nvc;
+
+                // find the urls for the movies, extract the string following "Download:
+                string tempString = data.Substring(pos + 18);
+                // find the end of the screen line (a </p> or a <br />)
+                string[] tempStringArray = tempString.Split(new string[] { @"</p>", @"<br" }, StringSplitOptions.None);
+                tempString = tempStringArray[0];
+
+                // extract all the individual links from the tempString
                 // Sample link: [0] = "<a href=\"http://movies.apple.com/movies/magnolia_pictures/twolovers/twolovers-clip_h480p.mov\">480p</a>"
-                string[] tempStringArray = tempString.Split(new Char[] { ',' });
-                
-
-                NameValueCollection nvc = new NameValueCollection(tempStringArray.Length);
+                tempStringArray = tempString.Split(new Char[] { ',' });
 
                 for (int i = 0; i < tempStringArray.Length; i++)
                 {
-                    nvc.Add(tempStringArray[i].Substring(tempStringArray[i].IndexOf(">") +1,(tempStringArray[i].IndexOf(@"</a>") - tempStringArray[i].IndexOf(">") - 1)),
-                        tempStringArray[i].Substring(tempStringArray[i].IndexOf("http"), tempStringArray[i].IndexOf("\">") - tempStringArray[i].IndexOf("http")));
+                    string s1 = tempStringArray[i].Substring(tempStringArray[i].IndexOf(">") + 1, (tempStringArray[i].IndexOf(@"</a>") - tempStringArray[i].IndexOf(">") - 1));
+                    string s2 = tempStringArray[i].Substring(tempStringArray[i].IndexOf("http"), tempStringArray[i].IndexOf("\">") - tempStringArray[i].IndexOf("http"));
 
+                    nvc.Add(s1, s2);
                 }
 
 
-            #endregion
+                // now find the poster url
+                // look for first 'Link to Catalog' then pick the src attribute from the first img tag
 
-            string tempString2 = null;
-            //Need a loop here to pick highest priority quality. 
-            for (int i = 0; i < quality.Length; i++)
-            {
-                //Does a trailer of the preferred quality exist? If so, set it.. if not, try the next one
-               tempString2 = nvc.Get(quality[i]).Replace(@"amp;","");
-               CurrentQualityPreference = quality[i];
-                
-                //If you find one with the proper key, jump out of the for-loop
-               if (tempString2 != null)
-                   i = quality.Length;
+                tempString = data.Substring(data.IndexOf("<strong>Link to Catalog</strong>"));
+                tempString = tempString.Substring(tempString.IndexOf("<img "));
+                tempString = tempString.Substring(tempString.IndexOf("src=\"") + 5);
+                tempString = tempString.Substring(0, tempString.IndexOf("\""));
+
+                nvc.Add("poster", tempString);
+                return nvc;
 
             }
-            return tempString2;
-
-            }
-            catch
+            catch (Exception e)
             {
-                WriteLog("ERROR: Something is weird with this one... check source");
-                //AddToEmailSummary("ERROR: Something is weird with this one... check source");
+                log.WriteLine("Exception in GetDownloadUrls (" + link + ")");
+                log.WriteLine(e.ToString());
                 return null;
             }
-
-
         }
 
-
-        static void Config_Load()
+        static string GetPreferredURL(NameValueCollection nvc, string[] quality, ref string qualPref)
         {
-
-            //Load our config
-            // Get the AppSettings section.
-
-            QualityPreference = ConfigurationManager.AppSettings["QualityPreference"].Split(new Char[] { ',' });
-            TrailerDownloadFolder = ConfigurationManager.AppSettings["TrailerDownloadFolder"];
-            MetadataDownloadFolder = ConfigurationManager.AppSettings["MetadataDownloadFolder"];
-            AllorToday = ConfigurationManager.AppSettings["AllorToday"];
-            GrabPoster = Convert.ToBoolean(ConfigurationManager.AppSettings["GrabPoster"]);
-            CreateFolder = Convert.ToBoolean(ConfigurationManager.AppSettings["CreateFolder"]);
-            VerboseLogging = Convert.ToBoolean(ConfigurationManager.AppSettings["VerboseLogging"]);
-            PhysicalLog = Convert.ToBoolean(ConfigurationManager.AppSettings["PhysicalLog"]);
-            PauseWhenDone = Convert.ToBoolean(ConfigurationManager.AppSettings["PauseWhenDone"]);
-            KeepFor = Convert.ToInt32(ConfigurationManager.AppSettings["KeepFor"]);
-            UseExclusions = Convert.ToBoolean(ConfigurationManager.AppSettings["UseExclusions"]);
-            EmailAddress = ConfigurationManager.AppSettings["EmailAddress"];
-            EmailSummary = Convert.ToBoolean(ConfigurationManager.AppSettings["EmailSummary"]);
-            SMTPServer = ConfigurationManager.AppSettings["SMTPServer"];
-
-            
-
-            if (PhysicalLog)
-            {   
-                if (!File.Exists("HD-Trailers.NET Downloader.log"))
-                    logFS = new FileStream("HD-Trailers.NET Downloader.log",FileMode.Create);
-                else
-                    logFS = new FileStream("HD-Trailers.NET Downloader.log",FileMode.Append);
-
-                sw = new StreamWriter(logFS);                
-            }
-
-
-            if (VerboseLogging)
+            try 
             {
-                WriteLog("Config loaded");
-                string tString = "Quality Preference: " + QualityPreference[0];
-                for (int i = 1; i < QualityPreference.Length; i++)
-                    tString = tString + "," + QualityPreference[i];
-                WriteLog(tString);
-
-
-            }
-
-            if (UseExclusions)
-            {
-                if(VerboseLogging)
-                WriteLog("Using exclusions...");
-                
-                GetExclusions();
-                
-                if(VerboseLogging)
-                WriteLog(Exclusions.Count.ToString() + " exclusions loaded.");
-            }
-            else
-            {
-                if(VerboseLogging)
-                WriteLog("Not using exclusions...");
-            }
-            WriteLog("");
-
-
-
-        }
-
-        static void WriteExclusions()
-        {
-
-            System.Xml.Serialization.XmlSerializer serializer =
-              new System.Xml.Serialization.XmlSerializer(typeof(ArrayList));
-            System.IO.TextWriter writer =
-              new System.IO.StreamWriter("HD-Trailers.Net Downloader Exclusions.xml", false);
-            serializer.Serialize(writer, Exclusions);
-            writer.Close();
-        }
-
-        static void GetExclusions()
-        {
-            //We are using exclusions. Load into arraylist or create empty arraylist
-            if(File.Exists("HD-Trailers.Net Downloader Exclusions.xml"))
-            {
-            System.Xml.Serialization.XmlSerializer serializer =
-  new System.Xml.Serialization.XmlSerializer(typeof(ArrayList));
-            System.IO.TextReader reader =
-              new System.IO.StreamReader("HD-Trailers.Net Downloader Exclusions.xml");
-            Exclusions = (ArrayList)serializer.Deserialize(reader);
-            reader.Close();
-            }
-        }
-
-        static bool GetTrailer(string downloadURL, string trailerTitle, string downloadPath)
-        {
-            if (VerboseLogging)
-                WriteLog("DownloadPath = " + downloadPath);
-
-            bool tempBool = false;
-            trailerTitle = trailerTitle.Replace(":", "").Replace("?","");
-
-            //Make this work for .WMV and .MOV. Add more later as needed
-            string fileName;
-                
-            if(downloadURL.Contains(".wmv"))
-                fileName = trailerTitle + "_" + CurrentQualityPreference + ".wmv";
-            else if(downloadURL.Contains(".zip"))
-                fileName = trailerTitle + "_" + CurrentQualityPreference + ".zip";
-            else
-                fileName = trailerTitle + "_" + CurrentQualityPreference + ".mov";
-
-            
-            if (!File.Exists(downloadPath + pathsep + fileName))
-            {
-
-                try
+                string tempString2 = null;
+                //Need a loop here to pick highest priority quality. 
+                for (int i = 0; i < quality.Length; i++)
                 {
-                    using (WebClient Client = new WebClient())
-                    {
-                        if (VerboseLogging)
-                            WriteLog("Grabbing trailer: " + trailerTitle);
+                    //Does a trailer of the preferred quality exist? If so, set it.. if not, try the next one
+                   tempString2 = nvc.Get(quality[i]);
+                   if (tempString2 != null)
+                   {
+                       tempString2 = nvc.Get(quality[i]).Replace(@"amp;", "");
+                       qualPref = quality[i];
 
-                        if (downloadURL.Contains("yahoo"))
-                        {
-                            Client.Headers.Add("Referer", "http://movies.yahoo.com/");
-                        }
-
-                        Client.DownloadFile(downloadURL, downloadPath + pathsep + fileName);
-
-                        if (VerboseLogging)
-                            WriteLog("Grab successful");
-                    }
-
-
-                    tempBool = true;
+                       //If you find one with the proper key, jump out of the for-loop
+                       if (tempString2 != null)
+                           i = quality.Length;
+                   }
                 }
-                catch(Exception e)
-                {
-                    WriteLog("ERROR: " + e.Message);
-                    tempBool = false;
-                    return tempBool;
-                }
-                
-                
+
+                return tempString2;
+
             }
-            else
+            catch (Exception e)
             {
-                tempBool = false;
-                WriteLog("File already exists! Skipping...");
+                log.WriteLine("ERROR: Something is weird with this one... check source");
+                log.WriteLine(e.ToString());
+                AddToEmailSummary("ERROR: Something is weird with this one... check source");
+                return null;
             }
-            return tempBool;
-            
         }
-        static bool GetOrResumeTrailer(string downloadURL, string trailerTitle, string downloadPath)
+
+
+        static bool GetOrResumeTrailer(string downloadURL, string trailerTitle, string downloadPath, string qualPref, string posterUrl)
         {
-            HttpWebRequest webRequest;
-            HttpWebResponse webResponse;
-            FileStream strLocal;
-            Stream strResponse;
+            HttpWebRequest myWebRequest;
+            HttpWebResponse myWebResponse;
             bool tempBool = false;
 
             int StartPointInt;
 
-            if (VerboseLogging)
-            WriteLog("Trailer DownloadPath = " + downloadPath);
-
+            log.VerboseWrite("Trailer DownloadPath = " + downloadPath);
 
             trailerTitle = trailerTitle.Replace(":", "").Replace("?", "");
 
             //Make this work for .WMV and .MOV. Add more later as needed
             string fileName;
+            string upperDownloadUrl = downloadURL.ToUpper();
 
-            if (downloadURL.Contains(".wmv"))
-                fileName = trailerTitle + "_" + CurrentQualityPreference + ".wmv";
-            else if (downloadURL.Contains(".zip"))
-                fileName = trailerTitle + "_" + CurrentQualityPreference + ".zip";
+            if (upperDownloadUrl.Contains(".WMV"))
+                fileName = trailerTitle + "_" + qualPref + ".wmv";
+            else if (upperDownloadUrl.Contains(".ZIP"))
+                fileName = trailerTitle + "_" + qualPref + ".zip";
             else
-                fileName = trailerTitle + "_" + CurrentQualityPreference + ".mov";
+                fileName = trailerTitle + "_" + qualPref + ".mov";
 
             if (File.Exists(downloadPath + pathsep + fileName))
             {
@@ -523,205 +434,157 @@ namespace HDTrailersNETDownloader
             else
                 StartPointInt = 0;
 
-
-                //Get the size of file on webserver
-                HttpWebResponse webResponseTemp;
-                HttpWebRequest webRequestTemp;
-
-                webRequestTemp = (HttpWebRequest)WebRequest.Create(downloadURL);
-                webResponseTemp = (HttpWebResponse)webRequestTemp.GetResponse();
-
-                // Ask the server for the file size and store it
-
-                int fileSize = Convert.ToInt32(webResponseTemp.ContentLength);
-
-
-
-            if(StartPointInt < fileSize)
+            myWebRequest = (HttpWebRequest)WebRequest.Create(downloadURL);
+            if (upperDownloadUrl.Contains("APPLE.COM"))
             {
+                myWebRequest.UserAgent = config.AppleUserAgent;
+            }
 
+            myWebResponse = (HttpWebResponse)myWebRequest.GetResponse();
+
+            // Ask the server for the file size and store it
+            int fileSize = Convert.ToInt32(myWebResponse.ContentLength);
+
+            myWebResponse.Close();
+            myWebRequest.Abort();
+
+            if ((config.MinTrailerSize > 0) && (fileSize < config.MinTrailerSize))
+            {
+                log.WriteLine("Trailer size smaller then MinTrailerSize. Skipping ...");
+                return false;
+            }
+
+
+            if (StartPointInt < fileSize)
+            {
+                Stream strResponse;
+                FileStream strLocal;
 
                 // Create a request to the file we are downloading
-
-                webRequest = (HttpWebRequest)WebRequest.Create(downloadURL);
-
-                if (StartPointInt != 0)
+                myWebRequest = (HttpWebRequest)WebRequest.Create(downloadURL);
+                myWebRequest.Credentials = CredentialCache.DefaultCredentials;
+                if (upperDownloadUrl.Contains("APPLE.COM"))
                 {
-                    //Add point to start from
-                    webRequest.AddRange(StartPointInt, fileSize);
-
+                    myWebRequest.UserAgent = config.AppleUserAgent;
                 }
 
-
-                //// Set default authentication for retrieving the file
-
-                webRequest.Credentials = CredentialCache.DefaultCredentials;
-
+                if (StartPointInt > 0)
+                    myWebRequest.AddRange(StartPointInt, fileSize);
+                
                 // Retrieve the response from the server
-
-                webResponse = (HttpWebResponse)webRequest.GetResponse();
-
+                myWebResponse = (HttpWebResponse)myWebRequest.GetResponse();
 
                 // Open the URL for download
-
-                strResponse = webResponse.GetResponseStream();
-
-         
+                strResponse = myWebResponse.GetResponseStream();
 
                 // Create a new file stream where we will be saving the data (local drive)
-
                 if (StartPointInt == 0)
                 {
-
                     strLocal = new FileStream(downloadPath + pathsep + fileName, FileMode.Create, FileAccess.Write, FileShare.None);
-
                 }
-
                 else
                 {
-                    if (webResponse.StatusCode == HttpStatusCode.PartialContent)
-                        WriteLog(StartPointInt.ToString() + " bytes of " + Convert.ToInt32(fileSize).ToString() + " located on disk. Resuming...");
+                    if (myWebResponse.StatusCode == HttpStatusCode.PartialContent)
+                        log.WriteLine(StartPointInt.ToString() + " bytes of " + Convert.ToInt32(fileSize).ToString() + " located on disk. Resuming...");
                     else
-                        WriteLog(StartPointInt.ToString() + " bytes of " + Convert.ToInt32(fileSize).ToString() + " located on disk. Server will not resume!!");
-
+                        log.WriteLine(StartPointInt.ToString() + " bytes of " + Convert.ToInt32(fileSize).ToString() + " located on disk. Server will not resume!!");
 
                     strLocal = new FileStream(downloadPath + pathsep + fileName, FileMode.Append, FileAccess.Write, FileShare.None);
-
                 }
 
-
-
                 // It will store the current number of bytes we retrieved from the server
-
                 int bytesSize = 0;
 
                 // A buffer for storing and writing the data retrieved from the server
-
-                byte[] downBuffer = new byte[2048];
-
+                byte[] downBuffer = new byte[65536];
 
 
                 // Loop through the buffer until the buffer is empty
-
                 while ((bytesSize = strResponse.Read(downBuffer, 0, downBuffer.Length)) > 0)
                 {
-
                     // Write the data from the buffer to the local hard drive
-
                     strLocal.Write(downBuffer, 0, bytesSize);
-
-                }
-
-                // When the above code has ended, close the streams
+                    StartPointInt += bytesSize;
+                    
+                    double t = ((double)StartPointInt) / fileSize;
+                    log.ConsoleWrite(t.ToString("###.0%\r", CultureInfo.InvariantCulture));
+                }                // When the above code has ended, close the streams
 
                 strResponse.Close();
-
                 strLocal.Close();
+                myWebResponse.Close();
 
                 tempBool = true;
             }
             else if (StartPointInt == Convert.ToInt32(fileSize))
             {
-                tempBool = false;
-                WriteLog("File exists and is same size. Skipping...");
+                tempBool = true;
+                log.WriteLine("File exists and is same size. Skipping...");
             }
             else
             {
                 tempBool = false;
-                WriteLog("Something else is wrong.. size on disk is greater than size on web.");
+                log.WriteLine("Something else is wrong.. size on disk is greater than size on web.");
             }
 
-                return tempBool;
+            //Assuming we downloaded the trailer OK and the config has been set to grab posters...
+            if ( (tempBool) && (config.GrabPoster))
+                GetPoster(posterUrl, downloadPath);
 
-            }
+            return tempBool;
+        }
 
-
-        
         static void GetPoster(string source, string downloadPath)
         {
-
             try
             {
- 
-                //First get Poster URL
-                // Match this: margin-left: 10px; margin-right: 10px;" src="
-                // + 45
-                // Then poster URL ends on next "
-                string tempStart = "margin-left: 10px; margin-right: 10px;\" src=\"";
-                string tempEnd = "\"";
+                string fname = downloadPath + pathsep +@"folder.jpg";
 
-                
-                int urlStart = source.IndexOf(tempStart) + 45;
-                int urlEnd = source.IndexOf(tempEnd, (source.IndexOf(tempStart) + 45));
-                int difference = urlEnd - urlStart;
+                if ((source == null) || (source.Length == 0))
+                {
+                    log.VerboseWrite("No poster url found. Skipping....");
+                    return;
+                }
+                if (File.Exists(fname))
+                {
+                    log.VerboseWrite("Poster already downloaded. Skipping ...");
+                    return;
+                }
 
-                
-
-                string tempString = source.Substring(source.IndexOf(tempStart) + 45, difference);
-
-
-                //Now get the actual poster
                 using (WebClient Client = new WebClient())
                 {
+                    //Now get the actual poster
+                    log.VerboseWrite("Grabbing poster... ");
 
-                    if (VerboseLogging)
-                        WriteLog("Grabbing poster... ");
+                    Client.DownloadFile(source, fname);
 
-                    Client.DownloadFile(tempString, downloadPath + @"folder.jpg");
-
-                    if (VerboseLogging)
-                        WriteLog("Poster grab successful");
+                    log.VerboseWrite("Poster grab successful");
                 }
+                return;
             }
+
             catch (Exception e)
             {
-                WriteLog("ERROR: Could not grab poster.. exception to follow:");
-                WriteLog(e.Message);
+                log.WriteLine("ERROR: Could not grab poster.. exception to follow:");
+                log.WriteLine(e.Message);
             }
-
         }
+    
+        
 
-        static void WriteLog(string text)
-        {
-            try
-            {
-                if (text != "")
-                {
-                    Console.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString() + " - " + text);
-
-                    if (PhysicalLog)
-                        sw.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString() + " - " + text);
-                }
-                else
-                {
-                    Console.WriteLine();
-
-                    if (PhysicalLog)
-                        sw.WriteLine();
-                }
-            }
-            catch (Exception e)
-            { }
-
-
-        }
 
         static void AddToEmailSummary(string text)
         {
-
             MailBody = MailBody + "\r\n" + text;
-
-
         }
 
         static void SendEmailSummary()
         {
-
             try
             {
                 // To
                 MailMessage mailMsg = new MailMessage();
-                mailMsg.To.Add(EmailAddress);
+                mailMsg.To.Add(config.EmailAddress);
 
                 // From
                 MailAddress mailAddress = new MailAddress("fake_addr@trailers.com","HD-Trailer.NET Downloader");
@@ -732,7 +595,7 @@ namespace HDTrailersNETDownloader
                 mailMsg.Body = MailBody;
 
                 // Init SmtpClient and send
-                SmtpClient smtpClient = new SmtpClient(SMTPServer, 25);
+                SmtpClient smtpClient = new SmtpClient(config.SMTPServer, 25);
                 //System.Net.NetworkCredential credentials = new System.Net.NetworkCredential(args[5], args[5]);
                 //smtpClient.Credentials = credentials;
 
@@ -740,7 +603,7 @@ namespace HDTrailersNETDownloader
             }
             catch (Exception ex)
             {
-                WriteLog("ERROR: " + ex.Message);
+                log.WriteLine("ERROR: " + ex.Message);
             }
 
 

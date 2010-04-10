@@ -24,7 +24,11 @@ namespace HDTrailersNETDownloader
         public bool EmailSummary { get; private set; }
         public string EmailAddress { get; private set; }
         public string SMTPServer { get; private set; }
-        public string AppleUserAgent { get; private set; }
+        public string EmailReturnAddress { get; private set; }
+        public string EmailReturnDisplayName { get; private set; }
+        public bool AddDates { get; private set; }
+        public string[] UserAgentId { get; private set; }
+        public string[] UserAgentString { get; private set; }
 
 
         public Config()
@@ -55,15 +59,29 @@ namespace HDTrailersNETDownloader
             return Convert.ToInt32(ret, CultureInfo.InvariantCulture);
         }
 
+        private string[] GetStringArrayFromAppsettings(NameValueCollection coll, string name, string def)
+        {
+            string[] ret;
+            string res = GetStringFromAppsettings(coll, name, def);
+            if (( res == null) || (res.Length == 0))
+                return new string[0];
+
+            ret = res.Split(new Char[] { ',' });
+            if (ret == null)
+                return new string[0];
+
+            return ret;
+        }
+
         public void Init()
         {
             //Load our config
             // Get the AppSettings section.
             NameValueCollection appSetting = ConfigurationManager.AppSettings;
 
-            this.QualityPreference = (GetStringFromAppsettings(appSetting, "QualityPreference", "720p,480p")).Split(new Char[] { ',' });
-            this.TrailerDownloadFolder = GetStringFromAppsettings(appSetting, "TrailerDownloadFolder", "c:/Trailers");
-            this.MetadataDownloadFolder = GetStringFromAppsettings(appSetting, "MetadataDownloadFolder", "c:/Trailers");
+            this.QualityPreference = GetStringArrayFromAppsettings(appSetting, "QualityPreference", "720p,480p");
+            this.TrailerDownloadFolder = GetStringFromAppsettings(appSetting, "TrailerDownloadFolder", "c:\\Trailers").TrimEnd('\\');
+            this.MetadataDownloadFolder = GetStringFromAppsettings(appSetting, "MetadataDownloadFolder", "c:\\Trailers").TrimEnd('\\');
             this.GrabPoster = GetBooleanFromAppsettings(appSetting, "GrabPoster", "true");
             this.CreateFolder = GetBooleanFromAppsettings(appSetting, "CreateFolder", "true");
             this.VerboseLogging = GetBooleanFromAppsettings(appSetting, "VerboseLogging", "true");
@@ -76,16 +94,20 @@ namespace HDTrailersNETDownloader
             this.EmailSummary = GetBooleanFromAppsettings(appSetting, "EmailSummary", "false");
             this.EmailAddress = GetStringFromAppsettings(appSetting, "EmailAddress", "");
             this.SMTPServer = GetStringFromAppsettings(appSetting, "SMTPServer", "");
-
-            this.AppleUserAgent = GetStringFromAppsettings(appSetting, "AppleUserAgent", "QuickTime/7.6.2");
+            this.EmailReturnAddress = GetStringFromAppsettings(appSetting, "EmailReturnAddress", "");
+            this.EmailReturnDisplayName = GetStringFromAppsettings(appSetting, "EmailReturnDisplayName", "");
+            this.AddDates = GetBooleanFromAppsettings(appSetting, "AddDates", "true");
+            this.UserAgentId = GetStringArrayFromAppsettings(appSetting, "UserAgentIds", "");
+            this.UserAgentString = GetStringArrayFromAppsettings(appSetting, "UserAgentStrings", "");
         }
 
         public string Info()
         {
+            int i;
             StringBuilder sb = new StringBuilder();
             sb.AppendLine();
             sb.Append("QualityPreference: ");
-            for (int i = 0; i < QualityPreference.Length; i++)
+            for (i = 0; i < QualityPreference.Length; i++)
                 sb.AppendFormat("{0}   ", QualityPreference[i]);
             sb.AppendLine();
             sb.AppendFormat("{0}: {1}\n", "TrailerDownloadFolder", TrailerDownloadFolder.ToString());
@@ -99,9 +121,30 @@ namespace HDTrailersNETDownloader
             sb.AppendFormat("{0}: {1}\n", "UseExclusions", UseExclusions.ToString());
             sb.AppendFormat("{0}: {1}\n", "TrailersOnly", TrailerOnly.ToString());
             sb.AppendFormat("{0}: {1}\n", "MinTrailerSize", MinTrailerSize.ToString());
+            sb.AppendFormat("{0}: {1}\n", "AddDates", AddDates.ToString());
+            if ((UserAgentId == null) || (UserAgentId.Length == 0))
+            {
+                sb.AppendLine("No UserAgentId defined");
+            }
+            else
+            {
+                for (i=0; i<UserAgentId.Length; i++)
+                    sb.AppendFormat("UserAgendId({0}): {1}\n", i+1, UserAgentId[i]);
+            }
+            if ((UserAgentString == null) || (UserAgentString.Length == 0))
+            {
+                sb.AppendLine("No UserAgentString defined");
+            }
+            else
+            {
+                for (i = 0; i < UserAgentString.Length; i++)
+                    sb.AppendFormat("UserAgentString({0}): {1}\n", i+1, UserAgentString[i]);
+            }
             sb.AppendFormat("{0}: {1}\n", "EmailAddress", EmailAddress.ToString());
             sb.AppendFormat("{0}: {1}\n", "EmailSummary", EmailSummary.ToString());
             sb.AppendFormat("{0}: {1}\n", "SMTPServer", SMTPServer.ToString());
+            sb.AppendFormat("{0}: {1}\n", "EmailReturnAddress", EmailReturnAddress.ToString());
+            sb.AppendFormat("{0}: {1}\n", "EmailReturnDisplayName", EmailReturnDisplayName.ToString());
 
             return sb.ToString();
         }

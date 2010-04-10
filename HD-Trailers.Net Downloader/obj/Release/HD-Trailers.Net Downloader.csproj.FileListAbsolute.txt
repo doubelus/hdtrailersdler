@@ -12,3 +12,9 @@ C:\work\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloa
 C:\work\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
 C:\work\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
 C:\work\HDtrailer\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache
+W:\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.config
+W:\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
+W:\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
+W:\HDtrailer\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache
+W:\HDtrailer\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
+W:\HDtrailer\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb

@@ -15,69 +15,128 @@ namespace HDTrailersNETDownloader
 {
     class Program
     {
-
         static Config config = new Config();
         static Logging log = new Logging();
         static ArrayList Exclusions = new ArrayList();
 
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
-        static string Version = "HD-Trailers.Net Downloader v.89 BETA";
+        static string Version = "HD-Trailers.Net Downloader v.90 BETA";
 
 
+        static void Main(string[] args)
+        {
+            try
+            {
+                RssItems feedItems;
+
+                log.WriteLine(Version);
+                log.WriteLine("CodePlex: http://www.codeplex.com/hdtrailersdler");
+                log.WriteLine("By Brian Charbonneau - blog: http://www.brianssparetime.com");
+                log.WriteLine("Please visit http://www.hd-trailers.net for archives");
+                log.WriteLine("");
+
+                if (!Init())
+                    return;
+                if (!CheckConfigParameter())
+                    return;
+
+                //Delete folders/files if needed
+                DeleteEm();
+
+                feedItems = GetFeedItems(@"http://www.hd-trailers.net/blog/feed/");
+                log.VerboseWrite("RSS feed items (" + feedItems.Count.ToString() + ") grabbed successfully");
+
+                for (int i = 0; i < feedItems.Count; i++)
+                    ProcessFeedItem(feedItems[i].Title, feedItems[i].Link);
+
+                //Do housekeeping like serializing exclusions and sending email summary
+                log.VerboseWrite("");
+                log.VerboseWrite("Housekeeping:");
+
+                // write exclusion list if necessary
+                WriteExclusions(Exclusions);
+
+                // send email if desired
+                SendEmailSummary();
+
+                log.WriteLine("Done");
+
+                if (config.PauseWhenDone)
+                    Console.ReadLine();
+            }
+            catch (Exception e)
+            {
+                log.WriteLine("Unhandled Exception....");
+                log.WriteLine("Exception: " + e.Message);
+            }
+
+        }
 
         /// <summary>
         /// read data from appconfig. configure the logging object according to the appconfig information
         /// </summary>
-        static void Init()
+        static bool Init()
         {
-            config.Init();
-            log.Init(config.VerboseLogging, config.PhysicalLog);
-
-            log.VerboseWrite("Config loaded");
-            log.VerboseWrite(config.Info());
-
-            if (config.UseExclusions)
+            try
             {
-                log.VerboseWrite("Using exclusions...");
+                config.Init();
+                log.Init(config.VerboseLogging, config.PhysicalLog);
+                log.VerboseWrite("Config loaded");
+                log.VerboseWrite(config.Info());
 
-                Exclusions = ReadExclusions();
+                if (config.UseExclusions)
+                    Exclusions = ReadExclusions();
+                else
+                    log.VerboseWrite("Not using exclusions...");
 
-                log.VerboseWrite(Exclusions.Count.ToString() + " exclusions loaded.");
+                log.WriteLine("");
+                return true;
             }
-            else
+            catch (Exception e) 
             {
-                log.VerboseWrite("Not using exclusions...");
+                log.WriteLine("Unhandled exception during application Init routine. Application will close ....");
+                log.WriteLine("Exception: " + e.ToString());
+                return false;
             }
-            log.WriteLine("");
         }
 
-        static ArrayList ReadExclusions()
-        {
-            ArrayList exclusions;
 
-            //We are using exclusions. Load into arraylist or create empty arraylist
-            if (File.Exists("HD-Trailers.Net Downloader Exclusions.xml"))
+        /// <summary>
+        /// call this to check the configuration parameter for correctness
+        /// </summary>
+        /// <returns>true if configuration parameters are recognized as valid, false otherwise</returns>
+        static bool CheckConfigParameter()
+        {
+            try
             {
-                System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(ArrayList));
-                System.IO.TextReader reader =
-                  new System.IO.StreamReader("HD-Trailers.Net Downloader Exclusions.xml");
-                exclusions = (ArrayList)serializer.Deserialize(reader);
-                reader.Close();
+
+                if (config.TrailerDownloadFolder.Length == 0)
+                {
+                    log.WriteLine("Illegal TrailerDownloadFolder. Quitting ....");
+                    return false;
+                }
+                if (!Directory.Exists(config.TrailerDownloadFolder))
+                {
+                    log.VerboseWrite("Creating TrailerDownloadFolder: " + config.TrailerDownloadFolder);
+                    Directory.CreateDirectory(config.TrailerDownloadFolder);
+                }
+                if (config.UserAgentId.Length != config.UserAgentString.Length)
+                {
+                    log.WriteLine("Count of UserAgentId (" + config.UserAgentId.Length.ToString() + ") doesn't match count of UserAgentString (" + config.UserAgentString.Length.ToString() + "). Quitting ....");
+                    return false;
+                }
+
+                return true;
             }
-            else
-                exclusions = new ArrayList();
-
-            return exclusions;
+            catch (Exception e)
+            {
+                log.VerboseWrite("Unhandled Exception checking configuration Parameter. Application will close....");
+                log.VerboseWrite("Exception: " + e.ToString());
+                return false;
+            }
         }
 
-        static void WriteExclusions(ArrayList exclusions)
-        {
-            System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(ArrayList));
-            System.IO.TextWriter writer = new System.IO.StreamWriter("HD-Trailers.Net Downloader Exclusions.xml", false);
-            serializer.Serialize(writer, exclusions);
-            writer.Close();
-        }
 
         static void DeleteEm()
         {
@@ -112,11 +171,48 @@ namespace HDTrailersNETDownloader
                 }
                 catch (Exception e)
                 {
-                    log.WriteLine("Error deleting subdirectories");
+                    log.WriteLine("Error deleting subdirectories.");
                     log.WriteLine("Exception: " + e.ToString());
                 }
             }
             return;
+        }
+
+        /// <summary>
+        /// based on the trailername the target directory for storage is computed. this includes the search for
+        /// already existing directories, and returning the correct complete path to the target directory
+        /// </summary>
+        /// <param name="fname">trailername</param>
+        /// <returns>the complete qualfied path for the target directory</returns>
+        static string ManageDirectory(string fname)
+        {
+            string dirName = config.TrailerDownloadFolder;
+            if (!config.CreateFolder)
+            {
+                return dirName;
+            }
+
+            string[] dirList;
+
+            dirList = Directory.GetDirectories(config.TrailerDownloadFolder, fname);
+
+            if ((dirList == null) || (dirList.Length != 1))
+            {
+                dirList = Directory.GetDirectories(config.TrailerDownloadFolder, "????-??-?? " + fname);
+            }
+
+            if ((dirList != null) && (dirList.Length == 1))
+            {
+                // a subdirectory with this name exists, we are done
+                dirName = dirList[0];
+                return dirName;
+            }
+            
+            // we didn't find a match with the direct name or with a preceeding date info
+            // we are going to need a new directoryname
+            if (config.AddDates)
+                dirName = dirName + pathsep + DateTime.Now.ToString("yyyy-MM-dd") + " " + fname;
+            return dirName;
         }
 
         static void ProcessFeedItem(string title, string link)
@@ -136,12 +232,12 @@ namespace HDTrailersNETDownloader
 
             if (config.VerboseLogging)
             {
+                StringBuilder sb = new StringBuilder("\n");
+
                 for (int j = 0; j < nvc.Count; j++)
-                {
-                    StringBuilder sb = new StringBuilder();
-                    sb.AppendFormat("    {0,-10} {1}", nvc.GetKey(j), nvc.Get(j));
-                    log.VerboseWrite(sb.ToString());
-                }
+                    sb.AppendFormat("    {0,-10} {1}\n", nvc.GetKey(j), nvc.Get(j));
+
+                log.VerboseWrite(sb.ToString());
             }
 
             string tempTrailerURL = GetPreferredURL(nvc, config.QualityPreference, ref qualPreference);
@@ -166,30 +262,25 @@ namespace HDTrailersNETDownloader
             }
 
             bool tempBool;
-            string directory;
-            string fname;
             string posterUrl = nvc["poster"];
-
             bool tempDirectoryCreated = false;
 
-            if (config.CreateFolder)
-                directory = config.TrailerDownloadFolder + pathsep + title.Replace(":", "").Replace("?", "");
-            else
-                directory = config.TrailerDownloadFolder;
-            fname = title.Replace(":", "").Replace("?", "");
+            string fname = LegalFileName(title);
+            string dirName = ManageDirectory(fname);
 
-            log.VerboseWrite("Extracted download url (" + qualPreference + ") for " + title + ": " + tempTrailerURL);
+            log.VerboseWrite("Extracted download url (" + qualPreference + "): " + tempTrailerURL);
+            log.VerboseWrite("Local directory: " + dirName);
 
-            if ((config.CreateFolder) && (!Directory.Exists(directory)))
+            if ((config.CreateFolder) && (!Directory.Exists(dirName)))
             {
+                Directory.CreateDirectory(dirName);
                 tempDirectoryCreated = true;
-                Directory.CreateDirectory(directory);
             }
-            tempBool = GetOrResumeTrailer(tempTrailerURL, fname, directory + pathsep, qualPreference, posterUrl);
+            tempBool = GetOrResumeTrailer(tempTrailerURL, fname, dirName, qualPreference, posterUrl);
 
             //Delete the directory if it didn't download
             if (tempBool == false && tempDirectoryCreated == true)
-                Directory.Delete(directory);
+                Directory.Delete(dirName);
 
             //If download went ok, and we're using exclusions, add to list
             if (tempBool && config.UseExclusions)
@@ -205,72 +296,10 @@ namespace HDTrailersNETDownloader
             }
         }
 
-        static void Main(string[] args)
-        {
-            RssItems feedItems;
-
-            log.WriteLine(Version);
-            log.WriteLine("CodePlex: http://www.codeplex.com/hdtrailersdler");
-            log.WriteLine("By Brian Charbonneau - blog: http://www.brianssparetime.com");
-            log.WriteLine("Please visit http://www.hd-trailers.net for archives");
-            log.WriteLine("");
-
-            Init();
-
-            //Delete folders/files if needed
-            DeleteEm();
-
-            feedItems = GetFeedItems(@"http://www.hd-trailers.net/blog/feed/");
-            log.VerboseWrite("RSS feed items (" + feedItems.Count.ToString() + ") grabbed successfully");
-
-            try
-            {
-                for (int i = 0; i < feedItems.Count; i++)
-                {
-                    ProcessFeedItem(feedItems[i].Title, feedItems[i].Link);
-                }
-            }
-            catch (Exception e)
-            {
-                log.WriteLine("ERROR: " + e.Message);
-            }
-
-            //Do housekeeping like serializing exclusions and sending email summary
-            log.VerboseWrite("");
-            log.VerboseWrite("Housekeeping:");
-
-            if (config.UseExclusions)
-            {
-                //We're using exclusions... write to file for next run
-                log.VerboseWrite("");
-                log.VerboseWrite("Serializing exclusion list...");
-                
-                WriteExclusions(Exclusions);
-
-                log.VerboseWrite("Serialization complete.");
-            }
-
-            if (config.EmailSummary)
-            {
-                log.VerboseWrite("");
-                log.VerboseWrite("Sending email summary...");
-                               
-                SendEmailSummary();
-
-                log.VerboseWrite("Email summary sent.");
-            }
-            
-            log.WriteLine("Done");
-
-            if(config.PauseWhenDone)
-                Console.ReadLine();
-        }
-
         static RssItems GetFeedItems(string url)
         {
             try
             {
-
                 RssReader reader = new RssReader();
                 RssFeed feed = reader.Retrieve(url);
 
@@ -403,41 +432,63 @@ namespace HDTrailersNETDownloader
         }
 
 
-        static bool GetOrResumeTrailer(string downloadURL, string trailerTitle, string downloadPath, string qualPref, string posterUrl)
+        static string MakeFileName(string upperDownloadUrl, string fName, string dirName, string qualPref)
+        {
+            if (upperDownloadUrl.Contains(".WMV"))
+                fName = fName + "_" + qualPref + ".wmv";
+            else if (upperDownloadUrl.Contains(".ZIP"))
+                fName = fName + "_" + qualPref + ".zip";
+            else
+                fName = fName + "_" + qualPref + ".mov";
+
+            DirectoryInfo di = new DirectoryInfo(dirName);
+            FileInfo[] fi;
+
+            fi = di.GetFiles(fName);
+            if ((fi == null) || (fi.Length != 1))
+            {
+                fi = di.GetFiles("????-??-?? " + fName);
+            }
+            if ((fi != null) && (fi.Length == 1))
+            {
+                return fi[0].Name;
+            }
+
+            if ( (!config.CreateFolder) && (config.AddDates))
+            {
+                fName = DateTime.Now.ToString("yyyy-MM-dd") + " " + fName;
+            }
+            return fName;
+        }
+
+
+        static bool GetOrResumeTrailer(string downloadURL, string fName, string dirName, string qualPref, string posterUrl)
         {
             HttpWebRequest myWebRequest;
             HttpWebResponse myWebResponse;
             bool tempBool = false;
 
             int StartPointInt;
-
-            log.VerboseWrite("Trailer DownloadPath = " + downloadPath);
-
-            trailerTitle = trailerTitle.Replace(":", "").Replace("?", "");
-
             //Make this work for .WMV and .MOV. Add more later as needed
-            string fileName;
             string upperDownloadUrl = downloadURL.ToUpper();
+            string userAgentString = ManageUserAgent(upperDownloadUrl);
 
-            if (upperDownloadUrl.Contains(".WMV"))
-                fileName = trailerTitle + "_" + qualPref + ".wmv";
-            else if (upperDownloadUrl.Contains(".ZIP"))
-                fileName = trailerTitle + "_" + qualPref + ".zip";
-            else
-                fileName = trailerTitle + "_" + qualPref + ".mov";
 
-            if (File.Exists(downloadPath + pathsep + fileName))
+            fName = MakeFileName(upperDownloadUrl, fName, dirName, qualPref);
+            log.VerboseWrite("Filename : " + fName);
+
+            if (File.Exists(dirName + pathsep + fName))
             {
-                FileInfo fi = new FileInfo(downloadPath + pathsep + fileName);
+                FileInfo fi = new FileInfo(dirName + pathsep + fName);
                 StartPointInt = Convert.ToInt32(fi.Length);
             }
             else
                 StartPointInt = 0;
 
             myWebRequest = (HttpWebRequest)WebRequest.Create(downloadURL);
-            if (upperDownloadUrl.Contains("APPLE.COM"))
+            if (userAgentString != null)
             {
-                myWebRequest.UserAgent = config.AppleUserAgent;
+                myWebRequest.UserAgent = userAgentString;
             }
 
             myWebResponse = (HttpWebResponse)myWebRequest.GetResponse();
@@ -463,9 +514,9 @@ namespace HDTrailersNETDownloader
                 // Create a request to the file we are downloading
                 myWebRequest = (HttpWebRequest)WebRequest.Create(downloadURL);
                 myWebRequest.Credentials = CredentialCache.DefaultCredentials;
-                if (upperDownloadUrl.Contains("APPLE.COM"))
+                if (userAgentString != null)
                 {
-                    myWebRequest.UserAgent = config.AppleUserAgent;
+                    myWebRequest.UserAgent = userAgentString;
                 }
 
                 if (StartPointInt > 0)
@@ -480,7 +531,7 @@ namespace HDTrailersNETDownloader
                 // Create a new file stream where we will be saving the data (local drive)
                 if (StartPointInt == 0)
                 {
-                    strLocal = new FileStream(downloadPath + pathsep + fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+                    strLocal = new FileStream(dirName + pathsep + fName, FileMode.Create, FileAccess.Write, FileShare.None);
                 }
                 else
                 {
@@ -489,7 +540,7 @@ namespace HDTrailersNETDownloader
                     else
                         log.WriteLine(StartPointInt.ToString() + " bytes of " + Convert.ToInt32(fileSize).ToString() + " located on disk. Server will not resume!!");
 
-                    strLocal = new FileStream(downloadPath + pathsep + fileName, FileMode.Append, FileAccess.Write, FileShare.None);
+                    strLocal = new FileStream(dirName + pathsep + fName, FileMode.Append, FileAccess.Write, FileShare.None);
                 }
 
                 // It will store the current number of bytes we retrieved from the server
@@ -529,9 +580,23 @@ namespace HDTrailersNETDownloader
 
             //Assuming we downloaded the trailer OK and the config has been set to grab posters...
             if ( (tempBool) && (config.GrabPoster))
-                GetPoster(posterUrl, downloadPath);
+                GetPoster(posterUrl, dirName);
 
             return tempBool;
+        }
+
+        /// <summary>
+        /// based on the url look in the configuration if a useragent string is required
+        /// </summary>
+        /// <param name="url">the capitalized download url</param>
+        /// <returns>a valid user agent string or null</returns>
+        static string ManageUserAgent(string url)
+        {
+            for(int i=0; i<config.UserAgentId.Length; i++)
+                if (url.Contains(config.UserAgentId[i].ToUpper()))
+                    return config.UserAgentString[i];
+
+            return null;
         }
 
         static void GetPoster(string source, string downloadPath)
@@ -578,36 +643,143 @@ namespace HDTrailersNETDownloader
             MailBody = MailBody + "\r\n" + text;
         }
 
+
+        /// <summary>
+        /// Using the standard serialzer to read the exclusion list
+        /// </summary>
+        /// <returns>exclusion list</returns>
+        static ArrayList ReadExclusions()
+        {
+            if (config.UseExclusions)
+            {
+                try
+                {
+                    ArrayList exclusions;
+
+                    log.VerboseWrite("Using exclusions...");
+
+                    //We are using exclusions. Load into arraylist or create empty arraylist
+                    if (File.Exists("HD-Trailers.Net Downloader Exclusions.xml"))
+                    {
+                        System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(ArrayList));
+                        System.IO.TextReader reader = new System.IO.StreamReader("HD-Trailers.Net Downloader Exclusions.xml");
+                        exclusions = (ArrayList)serializer.Deserialize(reader);
+                        reader.Close();
+                    }
+                    else
+                        exclusions = new ArrayList();
+
+                    log.VerboseWrite(exclusions.Count.ToString() + " exclusions loaded.");
+
+                    return exclusions;
+                }
+                catch (Exception e)
+                {
+                    log.VerboseWrite("Exception reading exclusion file. Substituting empty exclusion list.");
+                    log.VerboseWrite("Exception: " + e.ToString());
+                    return new ArrayList();
+                }
+            }
+            else
+                return new ArrayList();
+        }
+
+        /// <summary>
+        /// write exclusion list if necessary
+        /// </summary>
+        /// <param name="exclusions"></param>
+        static void WriteExclusions(ArrayList exclusions)
+        {
+            try
+            {
+                if (config.UseExclusions)
+                {
+                    //We're using exclusions... write to file for next run
+                    log.VerboseWrite("");
+                    log.VerboseWrite("Serializing exclusion list...");
+
+                    System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(ArrayList));
+                    System.IO.TextWriter writer = new System.IO.StreamWriter("HD-Trailers.Net Downloader Exclusions.xml", false);
+                    serializer.Serialize(writer, exclusions);
+                    writer.Close();
+
+                    log.VerboseWrite("Serialization complete.");
+                }
+            }
+            catch (Exception e)
+            {
+                log.VerboseWrite("Writing exclusion list failed with exception.");
+                log.VerboseWrite("Exception: " + e.ToString());
+            }
+        }
+
         static void SendEmailSummary()
         {
             try
             {
-                // To
-                MailMessage mailMsg = new MailMessage();
-                mailMsg.To.Add(config.EmailAddress);
+                if (config.EmailSummary)
+                {
+                    log.VerboseWrite("");
+                    log.VerboseWrite("Sending email summary...");
 
-                // From
-                MailAddress mailAddress = new MailAddress("fake_addr@trailers.com","HD-Trailer.NET Downloader");
-                mailMsg.From = mailAddress;
+                    // To
+                    MailMessage mailMsg = new MailMessage();
+                    mailMsg.To.Add(config.EmailAddress);
 
-                // Subject and Body
-                mailMsg.Subject = Version + " Download Summary for " + DateTime.Now.ToShortDateString();
-                mailMsg.Body = MailBody;
+                    // From
+                    MailAddress mailAddress = new MailAddress(config.EmailReturnAddress, config.EmailReturnDisplayName);
+                    mailMsg.From = mailAddress;
 
-                // Init SmtpClient and send
-                SmtpClient smtpClient = new SmtpClient(config.SMTPServer, 25);
-                //System.Net.NetworkCredential credentials = new System.Net.NetworkCredential(args[5], args[5]);
-                //smtpClient.Credentials = credentials;
+                    // Subject and Body
+                    mailMsg.Subject = Version + " Download Summary for " + DateTime.Now.ToShortDateString();
+                    mailMsg.Body = MailBody;
 
-                smtpClient.Send(mailMsg);
+                    // Init SmtpClient and send
+                    SmtpClient smtpClient = new SmtpClient(config.SMTPServer, 25);
+                    //System.Net.NetworkCredential credentials = new System.Net.NetworkCredential(args[5], args[5]);
+                    //smtpClient.Credentials = credentials;
+
+                    smtpClient.Send(mailMsg);
+
+                    log.VerboseWrite("Email summary sent.");
+                }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                log.WriteLine("ERROR: " + ex.Message);
+                log.WriteLine("Exception Sending Email.");
+                log.WriteLine("Exception: " + e.Message);
             }
+        }
 
+        /// <summary>
+        /// removes all illegal characters so a string can represent a legal filename. the input string
+        /// is not allowed to include a file extension, 'sample' is a legal input, 'sample.txt' is not
+        /// a check for special filenames (CON, LPT1,...) is not being performed
+        /// </summary>
+        /// <param name="input">string to converted into a legal filename (not including file extension)</param>
+        /// <returns>a string contaning a legal filename</returns>
+        static string LegalFileName(string input)
+        {
+            // list of things not useful in filename. 'periods' are permitted, but for simplicity are being replaced
+            int i;
+            string[] illegalChars = { "<", ">", ":", "\"", "/", "\\", "|", "?", "*", "." };
 
+            if ((input == null) || (input.Length == 0))
+                return null;
 
+            StringBuilder sb = new StringBuilder(input);
+
+            for (i = 1; i <= 31; i++)
+                sb.Replace((char)i, '*');
+
+            for (i = 0; i < illegalChars.Length; i++)
+                sb.Replace(illegalChars[i], "");
+
+            string ret = sb.ToString().Trim();
+            if ((ret == null) || (ret.Length == 0))
+                return null;
+
+            return ret;
         }
     }
 }

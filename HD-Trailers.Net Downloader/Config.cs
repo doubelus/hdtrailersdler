@@ -29,6 +29,7 @@ namespace HDTrailersNETDownloader
         public bool AddDates { get; private set; }
         public string[] UserAgentId { get; private set; }
         public string[] UserAgentString { get; private set; }
+        public string FeedAddress { get; private set; }
 
 
         public Config()
@@ -99,6 +100,7 @@ namespace HDTrailersNETDownloader
             this.AddDates = GetBooleanFromAppsettings(appSetting, "AddDates", "true");
             this.UserAgentId = GetStringArrayFromAppsettings(appSetting, "UserAgentIds", "");
             this.UserAgentString = GetStringArrayFromAppsettings(appSetting, "UserAgentStrings", "");
+            this.FeedAddress = GetStringFromAppsettings(appSetting, "FeedAddress", @"http://www.hd-trailers.net/blog/feed/");
         }
 
         public string Info()

@@ -21,7 +21,7 @@ namespace HDTrailersNETDownloader
 
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
-        static string Version = "HD-Trailers.Net Downloader v.90 BETA";
+        static string Version = "HD-Trailers.Net Downloader v.91 BETA";
 
 
         static void Main(string[] args)
@@ -44,8 +44,8 @@ namespace HDTrailersNETDownloader
                 //Delete folders/files if needed
                 DeleteEm();
 
-                feedItems = GetFeedItems(@"http://www.hd-trailers.net/blog/feed/");
-                log.VerboseWrite("RSS feed items (" + feedItems.Count.ToString() + ") grabbed successfully");
+                feedItems = GetFeedItems(config.FeedAddress);
+                log.VerboseWrite("RSS feed items (" + feedItems.Count.ToString() + ") from "+ config.FeedAddress +" grabbed successfully");
 
                 for (int i = 0; i < feedItems.Count; i++)
                     ProcessFeedItem(feedItems[i].Title, feedItems[i].Link);
@@ -212,6 +212,8 @@ namespace HDTrailersNETDownloader
             // we are going to need a new directoryname
             if (config.AddDates)
                 dirName = dirName + pathsep + DateTime.Now.ToString("yyyy-MM-dd") + " " + fname;
+            else
+                dirName = dirName + pathsep + fname;
             return dirName;
         }
 

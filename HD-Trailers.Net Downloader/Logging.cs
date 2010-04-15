@@ -39,16 +39,12 @@ namespace HDTrailersNETDownloader
             {
                 string msg = DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString() + " - " + text;
                 Console.WriteLine(msg);
-
-                if (physicalLog)
-                    sw.WriteLine(msg);
+                PhysicalLogWriteLine(msg);
             }
             else
             {
                 Console.WriteLine();
-
-                if (physicalLog)
-                    sw.WriteLine();
+                PhysicalLogWriteLine(null);
             }
         }
 
@@ -62,6 +58,23 @@ namespace HDTrailersNETDownloader
             if (this.verboseLogging)
                 this.WriteLine(text);
         }
-    
+
+        /// <summary>
+        /// write to physical log if required and flush log file
+        /// </summary>
+        /// <param name="text">text to display, or null if only linefeed to output</param>
+        private void PhysicalLogWriteLine(string text)
+        {
+            if ((!physicalLog) || (sw == null))
+                return;
+
+            if (text == null)
+                sw.WriteLine();
+            else
+                sw.WriteLine(text);
+
+            sw.Flush();
+        }
+
     }
 }

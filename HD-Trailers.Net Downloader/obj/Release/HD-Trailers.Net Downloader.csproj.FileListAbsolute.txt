@@ -18,3 +18,9 @@ W:\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.p
 W:\HDtrailer\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache
 W:\HDtrailer\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
 W:\HDtrailer\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
+C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
+C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
+C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.config
+C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
+C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
+C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache

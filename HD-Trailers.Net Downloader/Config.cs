@@ -30,6 +30,9 @@ namespace HDTrailersNETDownloader
         public string[] UserAgentId { get; private set; }
         public string[] UserAgentString { get; private set; }
         public string FeedAddress { get; private set; }
+        public bool RunEXE { get; private set; }
+        public string Executable { get; private set; }
+        public string EXEArguements { get; private set; }
 
 
         public Config()
@@ -101,6 +104,9 @@ namespace HDTrailersNETDownloader
             this.UserAgentId = GetStringArrayFromAppsettings(appSetting, "UserAgentIds", "");
             this.UserAgentString = GetStringArrayFromAppsettings(appSetting, "UserAgentStrings", "");
             this.FeedAddress = GetStringFromAppsettings(appSetting, "FeedAddress", @"http://www.hd-trailers.net/blog/feed/");
+            this.RunEXE = GetBooleanFromAppsettings(appSetting, "RunEXE", "false");
+            this.Executable = GetStringFromAppsettings(appSetting, "Executable", "");
+            this.EXEArguements = GetStringFromAppsettings(appSetting, "EXEArguements", "");
         }
 
         public string Info()

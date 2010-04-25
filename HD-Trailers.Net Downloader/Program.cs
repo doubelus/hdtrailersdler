@@ -9,6 +9,7 @@ using System.Collections.Specialized;
 using System.Collections;
 using System.Net.Mail;
 using System.Globalization;
+using System.Diagnostics;
 
 
 namespace HDTrailersNETDownloader
@@ -32,7 +33,6 @@ namespace HDTrailersNETDownloader
 
                 log.WriteLine(Version);
                 log.WriteLine("CodePlex: http://www.codeplex.com/hdtrailersdler");
-                log.WriteLine("By Brian Charbonneau - blog: http://www.brianssparetime.com");
                 log.WriteLine("Please visit http://www.hd-trailers.net for archives");
                 log.WriteLine("");
 
@@ -59,6 +59,9 @@ namespace HDTrailersNETDownloader
 
                 // send email if desired
                 SendEmailSummary();
+
+                // run .exe if desired
+                RunEXE();
 
                 log.WriteLine("Done");
 
@@ -749,6 +752,47 @@ namespace HDTrailersNETDownloader
             catch (Exception e)
             {
                 log.WriteLine("Exception Sending Email.");
+                log.WriteLine("Exception: " + e.Message);
+            }
+        }
+
+        static void RunEXE()
+        {
+            try
+            {
+                if (config.RunEXE)
+                {
+                    log.VerboseWrite("");
+                    log.VerboseWrite("Running EXE...");
+
+                    Console.WriteLine("Running");
+
+                    Process pr = new Process();
+
+                    pr.StartInfo.FileName = config.Executable;
+
+                    pr.StartInfo.Arguments = config.EXEArguements;
+
+                    pr.Start();
+
+                    while (pr.HasExited == false)
+                        if ((DateTime.Now.Second % 5) == 0)
+                        { // Show a tick every five seconds.
+
+                            Console.Write(".");
+
+                            System.Threading.Thread.Sleep(1000);
+
+                        }
+
+
+                    
+                    log.VerboseWrite("EXE run complete.");
+                }
+            }
+            catch (Exception e)
+            {
+                log.WriteLine("Exception Running EXE.");
                 log.WriteLine("Exception: " + e.Message);
             }
         }

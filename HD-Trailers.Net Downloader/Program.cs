@@ -22,7 +22,7 @@ namespace HDTrailersNETDownloader
 
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
-        static string Version = "HD-Trailers.Net Downloader v.91 BETA";
+        static string Version = "HD-Trailers.Net Downloader v1.0";
 
 
         static void Main(string[] args)

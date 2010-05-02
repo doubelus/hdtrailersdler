@@ -31,6 +31,7 @@ namespace HDTrailersNETDownloader
         public string[] UserAgentString { get; private set; }
         public string FeedAddress { get; private set; }
         public bool RunEXE { get; private set; }
+        public bool RunOnlyWhenNewTrailers { get; private set; }
         public string Executable { get; private set; }
         public string EXEArguements { get; private set; }
 
@@ -105,6 +106,7 @@ namespace HDTrailersNETDownloader
             this.UserAgentString = GetStringArrayFromAppsettings(appSetting, "UserAgentStrings", "");
             this.FeedAddress = GetStringFromAppsettings(appSetting, "FeedAddress", @"http://www.hd-trailers.net/blog/feed/");
             this.RunEXE = GetBooleanFromAppsettings(appSetting, "RunEXE", "false");
+            this.RunOnlyWhenNewTrailers = GetBooleanFromAppsettings(appSetting, "RunOnlyWhenNewTrailers", "false");
             this.Executable = GetStringFromAppsettings(appSetting, "Executable", "");
             this.EXEArguements = GetStringFromAppsettings(appSetting, "EXEArguements", "");
         }

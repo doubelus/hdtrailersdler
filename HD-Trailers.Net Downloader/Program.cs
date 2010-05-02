@@ -23,6 +23,7 @@ namespace HDTrailersNETDownloader
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
         static string Version = "HD-Trailers.Net Downloader v1.0";
+        static int NewTrailerCount = 0;
 
 
         static void Main(string[] args)
@@ -33,7 +34,7 @@ namespace HDTrailersNETDownloader
 
                 log.WriteLine(Version);
                 log.WriteLine("CodePlex: http://www.codeplex.com/hdtrailersdler");
-                log.WriteLine("Please visit http://www.hd-trailers.net for archives");
+                log.WriteLine("HD Trailer Blog: http://www.hd-trailers.net");
                 log.WriteLine("");
 
                 if (!Init())
@@ -61,7 +62,8 @@ namespace HDTrailersNETDownloader
                 SendEmailSummary();
 
                 // run .exe if desired
-                RunEXE();
+                if(config.RunEXE)
+                    RunEXE();
 
                 log.WriteLine("Done");
 
@@ -570,11 +572,13 @@ namespace HDTrailersNETDownloader
                 strLocal.Close();
                 myWebResponse.Close();
 
+                // Increment NewTrailerCount(er)
+                NewTrailerCount = NewTrailerCount + 1;
                 tempBool = true;
             }
             else if (StartPointInt == Convert.ToInt32(fileSize))
             {
-                tempBool = true;
+                tempBool = false;
                 log.WriteLine("File exists and is same size. Skipping...");
             }
             else
@@ -760,35 +764,45 @@ namespace HDTrailersNETDownloader
         {
             try
             {
-                if (config.RunEXE)
-                {
-                    log.VerboseWrite("");
-                    log.VerboseWrite("Running EXE...");
 
-                    Console.WriteLine("Running");
+                if ((config.RunOnlyWhenNewTrailers && NewTrailerCount == 0))
+                    log.VerboseWrite("Not running exe. No new trailers downloaded");
+                else
+                    {
+                        log.VerboseWrite("");
+                        log.VerboseWrite("Running EXE...");
 
-                    Process pr = new Process();
+                        Console.WriteLine("Running");
 
-                    pr.StartInfo.FileName = config.Executable;
+                        Process pr = new Process();
 
-                    pr.StartInfo.Arguments = config.EXEArguements;
-
-                    pr.Start();
-
-                    while (pr.HasExited == false)
-                        if ((DateTime.Now.Second % 5) == 0)
-                        { // Show a tick every five seconds.
-
-                            Console.Write(".");
-
-                            System.Threading.Thread.Sleep(1000);
-
-                        }
+                        pr.StartInfo.FileName = config.Executable;
 
 
-                    
-                    log.VerboseWrite("EXE run complete.");
-                }
+                        // %N = # of new videos downloaded this run
+                        string tempString = @config.EXEArguements.Replace("%N", NewTrailerCount.ToString()); ;
+
+                        pr.StartInfo.Arguments = tempString;
+
+
+
+                        pr.Start();
+
+                        while (pr.HasExited == false)
+                            if ((DateTime.Now.Second % 5) == 0)
+                            { // Show a tick every five seconds.
+
+                                Console.Write(".");
+
+                                System.Threading.Thread.Sleep(1000);
+
+                            }
+
+
+
+                        log.VerboseWrite("EXE run complete.");
+                    }
+                
             }
             catch (Exception e)
             {

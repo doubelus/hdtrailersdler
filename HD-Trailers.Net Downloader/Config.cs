@@ -10,6 +10,7 @@ namespace HDTrailersNETDownloader
     class Config
     {
         public string[] QualityPreference { get; private set; }
+        public string[] SitesToSkip { get; private set; }
         public string TrailerDownloadFolder { get; private set; }
         public string MetadataDownloadFolder { get; private set; }
         public bool CreateFolder { get; private set; }
@@ -85,6 +86,7 @@ namespace HDTrailersNETDownloader
             NameValueCollection appSetting = ConfigurationManager.AppSettings;
 
             this.QualityPreference = GetStringArrayFromAppsettings(appSetting, "QualityPreference", "720p,480p");
+            this.SitesToSkip = GetStringArrayFromAppsettings(appSetting, "SitesToSkip", "");
             this.TrailerDownloadFolder = GetStringFromAppsettings(appSetting, "TrailerDownloadFolder", "c:\\Trailers").TrimEnd('\\');
             this.MetadataDownloadFolder = GetStringFromAppsettings(appSetting, "MetadataDownloadFolder", "c:\\Trailers").TrimEnd('\\');
             this.GrabPoster = GetBooleanFromAppsettings(appSetting, "GrabPoster", "true");

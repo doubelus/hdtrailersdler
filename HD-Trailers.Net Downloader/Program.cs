@@ -22,7 +22,7 @@ namespace HDTrailersNETDownloader
 
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
-        static string Version = "HD-Trailers.Net Downloader v1.0";
+        static string Version = "HD-Trailers.Net Downloader v1.1";
         static int NewTrailerCount = 0;
 
         [PreEmptive.Attributes.Setup(CustomEndpoint = "so-s.info/PreEmptive.Web.Services.Messaging/MessagingServiceV2.asmx")]
@@ -250,6 +250,18 @@ namespace HDTrailersNETDownloader
             }
 
             string tempTrailerURL = GetPreferredURL(nvc, config.QualityPreference, ref qualPreference);
+
+            
+            // Compare download url to sitestoskip item in config. If match detected, skip and log.
+            for (int t = 0; t < config.SitesToSkip.Count(); t++)
+                if (tempTrailerURL.Contains(config.SitesToSkip[t]))
+                {
+                    log.WriteLine("Trailer source (" + config.SitesToSkip[t] + ") is identified as Site To Skip in config. Skipping...");
+                    AddToEmailSummary("Trailer source (" + config.SitesToSkip[t] + ") is identified as Site To Skip in config. Skipping...");
+                    return;
+
+                }
+            
 
             if (tempTrailerURL == null)
             {

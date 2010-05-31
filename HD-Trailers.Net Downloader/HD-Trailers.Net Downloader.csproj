@@ -35,6 +35,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PreEmptive.Attributes">
+      <HintPath>..\..\..\..\..\..\..\Program Files\Microsoft Visual Studio 10.0\PreEmptive Solutions\Dotfuscator Community Edition\PreEmptive.Attributes.dll</HintPath>
+    </Reference>
     <Reference Include="RssReader, Version=1.0.1507.4533, Culture=neutral">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>\\NAS\brian-laptop\Visual Studio Projects\Temp\RssReader_src\RssReader\bin\Release\RssReader.dll</HintPath>

@@ -25,11 +25,13 @@ namespace HDTrailersNETDownloader
         static string Version = "HD-Trailers.Net Downloader v1.0";
         static int NewTrailerCount = 0;
 
-
+        [PreEmptive.Attributes.Setup(CustomEndpoint = "so-s.info/PreEmptive.Web.Services.Messaging/MessagingServiceV2.asmx")]
+        [PreEmptive.Attributes.Teardown()]
         static void Main(string[] args)
         {
             try
             {
+
                 RssItems feedItems;
 
                 log.WriteLine(Version);

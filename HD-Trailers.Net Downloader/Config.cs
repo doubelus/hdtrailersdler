@@ -19,6 +19,7 @@ namespace HDTrailersNETDownloader
         public bool PhysicalLog { get; private set; }
         public int KeepFor { get; private set; }
         public bool GrabPoster { get; private set; }
+        public bool XBMCFilenames { get; private set; }
         public bool UseExclusions { get; private set; }
         public bool TrailerOnly { get; private set; }
         public int MinTrailerSize { get; private set; }
@@ -90,6 +91,7 @@ namespace HDTrailersNETDownloader
             this.TrailerDownloadFolder = GetStringFromAppsettings(appSetting, "TrailerDownloadFolder", "c:\\Trailers").TrimEnd('\\');
             this.MetadataDownloadFolder = GetStringFromAppsettings(appSetting, "MetadataDownloadFolder", "c:\\Trailers").TrimEnd('\\');
             this.GrabPoster = GetBooleanFromAppsettings(appSetting, "GrabPoster", "true");
+            this.XBMCFilenames = GetBooleanFromAppsettings(appSetting, "XBMCFilenames", "false");
             this.CreateFolder = GetBooleanFromAppsettings(appSetting, "CreateFolder", "true");
             this.VerboseLogging = GetBooleanFromAppsettings(appSetting, "VerboseLogging", "true");
             this.PhysicalLog = GetBooleanFromAppsettings(appSetting, "PhysicalLog", "true");

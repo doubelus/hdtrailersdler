@@ -25,3 +25,10 @@ C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\
 C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.pdb
 C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\obj\Debug\ResolveAssemblyReference.cache
 C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\bin\Debug\PreEmptive.Attributes.dll
+G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.exe
+G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.pdb
+G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.exe.config
+G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.exe
+G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.pdb
+G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\PreEmptive.Attributes.dll
+G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\ResolveAssemblyReference.cache

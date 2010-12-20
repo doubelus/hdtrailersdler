@@ -475,9 +475,13 @@ namespace HDTrailersNETDownloader
                 return fi[0].Name;
             }
 
-            if ( (!config.CreateFolder) && (config.AddDates))
+            if ((!config.CreateFolder) && (config.AddDates))
             {
                 fName = DateTime.Now.ToString("yyyy-MM-dd") + " " + fName;
+            }
+            if (config.XBMCFilenames)
+            {
+                fName = fName.Insert(fName.Length-4, "-trailer");
             }
             return fName;
         }

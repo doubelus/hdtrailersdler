@@ -8,6 +8,7 @@ namespace HDTrailersNETDownloader
     class Logging
     {
         private bool verboseLogging;
+        static string pathsep = Path.DirectorySeparatorChar.ToString();
         private bool physicalLog;
         private FileStream logFS;
         private StreamWriter sw;
@@ -20,14 +21,19 @@ namespace HDTrailersNETDownloader
 
         public void Init(bool verbose, bool physLog) 
         {
+//            string tmpstring;
             verboseLogging = verbose;
             physicalLog = physLog;
             if (physicalLog)
-            {   
-                if (!File.Exists("HD-Trailers.NET Downloader.log"))
-                    logFS = new FileStream("HD-Trailers.NET Downloader.log",FileMode.Create);
+            {
+//                 tmpstring = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader");
+                if (!Directory.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader")))
+                    Directory.CreateDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader"));
+//                tmpstring = Path.Combine(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader"), "HD-Trailers.NET Downloader.log");
+                if (!File.Exists(Path.Combine(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader"), "HD-Trailers.NET Downloader.log")))
+                    logFS = new FileStream(Path.Combine(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader"), "HD-Trailers.NET Downloader.log"), FileMode.Create);
                 else
-                    logFS = new FileStream("HD-Trailers.NET Downloader.log",FileMode.Append);
+                    logFS = new FileStream(Path.Combine(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader"), "HD-Trailers.NET Downloader.log"), FileMode.Append);
 
                 sw = new StreamWriter(logFS);                
             }

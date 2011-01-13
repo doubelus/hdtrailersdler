@@ -24,7 +24,6 @@ namespace HDTrailersNETDownloader
         static string MailBody;
         static string Version = "HD-Trailers.Net Downloader v1.1";
         static int NewTrailerCount = 0;
-
         [PreEmptive.Attributes.Setup(CustomEndpoint = "so-s.info/PreEmptive.Web.Services.Messaging/MessagingServiceV2.asmx")]
         [PreEmptive.Attributes.Teardown()]
         static void Main(string[] args)
@@ -33,14 +32,15 @@ namespace HDTrailersNETDownloader
             {
 
                 RssItems feedItems;
+                string AppDatadirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader");
+                if (!Init())
+                    return;
 
                 log.WriteLine(Version);
                 log.WriteLine("CodePlex: http://www.codeplex.com/hdtrailersdler");
                 log.WriteLine("HD Trailer Blog: http://www.hd-trailers.net");
                 log.WriteLine("");
 
-                if (!Init())
-                    return;
                 if (!CheckConfigParameter())
                     return;
 
@@ -275,10 +275,16 @@ namespace HDTrailersNETDownloader
                 AddToEmailSummary(title + " (" + qualPreference + ") : Title found in exclusions list. Skipping...");
                 return;
             }
-            if ((config.TrailerOnly) && (!title.Contains("Trailer")))
+            if ((config.TrailersOnly) && (!title.Contains("Trailer")))
             {
                 log.WriteLine("Title not a trailer. Skipping...");
                 AddToEmailSummary(title + " (" + qualPreference + ") : Title not a trailer. Skipping...");
+                return;
+            }
+            if ((config.StrictTrailersOnly) && (!title.Contains("(Trailer)")))
+            {
+                log.WriteLine("Strict Trailers Only set. Skipping...");
+                AddToEmailSummary(title + " (" + qualPreference + ") : Strict Trailers Only set. Skipping...");
                 return;
             }
 
@@ -686,10 +692,15 @@ namespace HDTrailersNETDownloader
                     log.VerboseWrite("Using exclusions...");
 
                     //We are using exclusions. Load into arraylist or create empty arraylist
-                    if (File.Exists("HD-Trailers.Net Downloader Exclusions.xml"))
+
+                    string pathstring = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader");
+                    if (!Directory.Exists(pathstring))
+                        Directory.CreateDirectory(pathstring);
+
+                    if (File.Exists(Path.Combine(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader"), "HD-Trailers.Net Downloader Exclusions.xml")))
                     {
                         System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(ArrayList));
-                        System.IO.TextReader reader = new System.IO.StreamReader("HD-Trailers.Net Downloader Exclusions.xml");
+                        System.IO.TextReader reader = new System.IO.StreamReader(Path.Combine(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader"), "HD-Trailers.Net Downloader Exclusions.xml"));
                         exclusions = (ArrayList)serializer.Deserialize(reader);
                         reader.Close();
                     }
@@ -726,7 +737,9 @@ namespace HDTrailersNETDownloader
                     log.VerboseWrite("Serializing exclusion list...");
 
                     System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(ArrayList));
-                    System.IO.TextWriter writer = new System.IO.StreamWriter("HD-Trailers.Net Downloader Exclusions.xml", false);
+//                    string pathstring = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader");
+                    System.IO.TextWriter writer = new System.IO.StreamWriter(Path.Combine(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader"), "HD-Trailers.Net Downloader Exclusions.xml"));
+//                    System.IO.TextWriter writer = new System.IO.StreamWriter(Path.Combine(pathstring, pathsep, "HD-Trailers.Net Downloader Exclusions.xml"));
                     serializer.Serialize(writer, exclusions);
                     writer.Close();
 

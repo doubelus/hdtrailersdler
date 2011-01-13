@@ -32,3 +32,14 @@ G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.N
 G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.pdb
 G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\PreEmptive.Attributes.dll
 G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\ResolveAssemblyReference.cache
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.exe
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.pdb
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.exe.config
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.exe
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.pdb
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\PreEmptive.Attributes.dll
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\ResolveAssemblyReference.cache
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.exe.manifest
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.application
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.exe.manifest
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.application

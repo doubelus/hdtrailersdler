@@ -21,7 +21,8 @@ namespace HDTrailersNETDownloader
         public bool GrabPoster { get; private set; }
         public bool XBMCFilenames { get; private set; }
         public bool UseExclusions { get; private set; }
-        public bool TrailerOnly { get; private set; }
+        public bool TrailersOnly { get; private set; }
+        public bool StrictTrailersOnly { get; private set; }
         public int MinTrailerSize { get; private set; }
         public bool EmailSummary { get; private set; }
         public string EmailAddress { get; private set; }
@@ -99,7 +100,8 @@ namespace HDTrailersNETDownloader
             this.KeepFor = GetInt32FromAppsettings(appSetting, "KeepFor", "0");
             this.MinTrailerSize = GetInt32FromAppsettings(appSetting, "MinTrailerSize", "100000");
             this.UseExclusions = GetBooleanFromAppsettings(appSetting, "UseExclusions", "true");
-            this.TrailerOnly = GetBooleanFromAppsettings(appSetting, "TrailersOnly", "true");
+            this.TrailersOnly = GetBooleanFromAppsettings(appSetting, "TrailersOnly", "true");
+            this.StrictTrailersOnly = GetBooleanFromAppsettings(appSetting, "StrictTrailersOnly", "true");
             this.EmailSummary = GetBooleanFromAppsettings(appSetting, "EmailSummary", "false");
             this.EmailAddress = GetStringFromAppsettings(appSetting, "EmailAddress", "");
             this.SMTPServer = GetStringFromAppsettings(appSetting, "SMTPServer", "");
@@ -133,7 +135,8 @@ namespace HDTrailersNETDownloader
             sb.AppendFormat("{0}: {1}\n", "PauseWhenDone", PauseWhenDone.ToString());
             sb.AppendFormat("{0}: {1}\n", "KeepFor", KeepFor.ToString());
             sb.AppendFormat("{0}: {1}\n", "UseExclusions", UseExclusions.ToString());
-            sb.AppendFormat("{0}: {1}\n", "TrailersOnly", TrailerOnly.ToString());
+            sb.AppendFormat("{0}: {1}\n", "TrailersOnly", TrailersOnly.ToString());
+            sb.AppendFormat("{0}: {1}\n", "StrictTrailersOnly", StrictTrailersOnly.ToString());
             sb.AppendFormat("{0}: {1}\n", "MinTrailerSize", MinTrailerSize.ToString());
             sb.AppendFormat("{0}: {1}\n", "AddDates", AddDates.ToString());
             if ((UserAgentId == null) || (UserAgentId.Length == 0))

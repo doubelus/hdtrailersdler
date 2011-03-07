@@ -10,6 +10,8 @@ using System.Collections;
 using System.Net.Mail;
 using System.Globalization;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
+
 
 
 namespace HDTrailersNETDownloader
@@ -19,6 +21,9 @@ namespace HDTrailersNETDownloader
         static Config config = new Config();
         static Logging log = new Logging();
         static ArrayList Exclusions = new ArrayList();
+        static IMDb imdb = new IMDb();
+        static NfoMovie NFOTrailer = new NfoMovie();
+        static NfoFile NFOTrailerFile = new NfoFile();
 
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
@@ -41,18 +46,22 @@ namespace HDTrailersNETDownloader
                 log.WriteLine("HD Trailer Blog: http://www.hd-trailers.net");
                 log.WriteLine("");
 
+                log.WriteLine("CommonApplicateData: " + System.Environment.GetFolderPath(System.Environment.SpecialFolder.CommonApplicationData));
+                log.WriteLine("LocalApplicationData: " +  Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+                log.WriteLine("LocalAppData: " + Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader"));
+
                 if (!CheckConfigParameter())
                     return;
 
                 //Delete folders/files if needed
                 DeleteEm();
-
                 feedItems = GetFeedItems(config.FeedAddress);
                 log.VerboseWrite("RSS feed items (" + feedItems.Count.ToString() + ") from "+ config.FeedAddress +" grabbed successfully");
 
                 for (int i = 0; i < feedItems.Count; i++)
+                {
                     ProcessFeedItem(feedItems[i].Title, feedItems[i].Link);
-
+                }
                 //Do housekeeping like serializing exclusions and sending email summary
                 log.VerboseWrite("");
                 log.VerboseWrite("Housekeeping:");
@@ -250,6 +259,8 @@ namespace HDTrailersNETDownloader
             }
 
             string tempTrailerURL = GetPreferredURL(nvc, config.QualityPreference, ref qualPreference);
+            string fname = LegalFileName(title);
+            string dirName = ManageDirectory(fname);
 
             
             // Compare download url to sitestoskip item in config. If match detected, skip and log.
@@ -281,19 +292,33 @@ namespace HDTrailersNETDownloader
                 AddToEmailSummary(title + " (" + qualPreference + ") : Title not a trailer. Skipping...");
                 return;
             }
-            if ((config.StrictTrailersOnly) && (!title.Contains("(Trailer)")))
-            {
-                log.WriteLine("Strict Trailers Only set. Skipping...");
-                AddToEmailSummary(title + " (" + qualPreference + ") : Strict Trailers Only set. Skipping...");
-                return;
+            if((config.IncludeGenres.IndexOf("all", StringComparison.OrdinalIgnoreCase) >= 0) || (config.ExcludeGenres.IndexOf("none", StringComparison.OrdinalIgnoreCase) >= 0) || config.CreateXBMCNfoFile) {
+                Regex reg = new Regex("\\(([^)]*)\\)");
+                string MovieName = reg.Replace(fname, "");
+//                String MovieName = "The Pruitt-Igoe Myth";
+                MovieName.Trim();
+                imdb.ImdbLookup(MovieName);
             }
+            if(!(config.IncludeGenres.IndexOf("all", StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                if (!imdb.isGenre(config.IncludeGenres)) return; 
+            }
+            if (!(config.ExcludeGenres.IndexOf("none", StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                if (imdb.isGenre(config.ExcludeGenres)) return;
+            }
+
+//            if ((config.StrictTrailersOnly) && !(title.Contains("(Theatrical Trailer)") || title.Contains("(Trailer)")))
+//            {
+//                log.WriteLine("Strict Trailers Only set. Skipping...");
+//                AddToEmailSummary(title + " (" + qualPreference + ") : Strict Trailers Only set. Skipping...");
+//                return;
+//            }
 
             bool tempBool;
             string posterUrl = nvc["poster"];
             bool tempDirectoryCreated = false;
 
-            string fname = LegalFileName(title);
-            string dirName = ManageDirectory(fname);
 
             log.VerboseWrite("Extracted download url (" + qualPreference + "): " + tempTrailerURL);
             log.VerboseWrite("Local directory: " + dirName);
@@ -303,8 +328,8 @@ namespace HDTrailersNETDownloader
                 Directory.CreateDirectory(dirName);
                 tempDirectoryCreated = true;
             }
-            tempBool = GetOrResumeTrailer(tempTrailerURL, fname, dirName, qualPreference, posterUrl);
 
+            tempBool = GetOrResumeTrailer(tempTrailerURL, fname, dirName, qualPreference, posterUrl);
             //Delete the directory if it didn't download
             if (tempBool == false && tempDirectoryCreated == true)
                 Directory.Delete(dirName);
@@ -321,6 +346,29 @@ namespace HDTrailersNETDownloader
                 log.WriteLine(title + " (" + qualPreference + ") : Downloaded");
                 AddToEmailSummary(title + " (" + qualPreference + ") : Downloaded");
             }
+            if (tempBool && config.CreateXBMCNfoFile)
+            {
+                NfoMovie NFOTrailer = new NfoMovie();
+                NfoFile NFOTrailerFile = new NfoFile();
+                NFOTrailer.Title = imdb.Title;
+                NFOTrailer.Quality = qualPreference;
+                NFOTrailer.Rating = imdb.Rating;
+                NFOTrailer.Year = imdb.Year;
+                NFOTrailer.Top250 = imdb.Top250;
+                NFOTrailer.Votes = imdb.Votes;
+                NFOTrailer.Plot = imdb.Plot;
+                NFOTrailer.Tagline = imdb.Tagline;
+                NFOTrailer.Runtime = imdb.Runtime;
+                NFOTrailer.Mpaa = imdb.MpaaRating;
+                NFOTrailer.Id = imdb.Id;
+                NFOTrailer.Runtime = imdb.Runtime;
+                string[] strStrings = imdb.Genres.ToArray(typeof(string)) as string[];
+                string JoinedString = String.Join(" / ", strStrings);
+                NFOTrailer.Genre = JoinedString;
+                String NfoName = MakeFileName(".nfo", fname, dirName, qualPreference);
+                NFOTrailerFile.saveNfoMovie(NFOTrailer, dirName + pathsep + NfoName);
+            }
+
         }
 
         static RssItems GetFeedItems(string url)
@@ -458,15 +506,30 @@ namespace HDTrailersNETDownloader
             }
         }
 
-
+        static string BuildFileName(string fName, string dirName, string ext)
+        {
+            if ((!config.CreateFolder) && (config.AddDates))
+            {
+                fName = DateTime.Now.ToString("yyyy-MM-dd") + " " + fName;
+            }
+            if (config.XBMCFilenames)
+            {
+                fName = fName.Insert(fName.Length - 4, "-trailer");
+            }
+            string nfofilename = dirName + pathsep + fName;
+            return Path.ChangeExtension(nfofilename, ext);
+        }
         static string MakeFileName(string upperDownloadUrl, string fName, string dirName, string qualPref)
         {
             if (upperDownloadUrl.Contains(".WMV"))
                 fName = fName + "_" + qualPref + ".wmv";
             else if (upperDownloadUrl.Contains(".ZIP"))
                 fName = fName + "_" + qualPref + ".zip";
+            else if (upperDownloadUrl.Contains(".nfo"))
+                fName = fName + "_" + qualPref + ".nfo";
             else
                 fName = fName + "_" + qualPref + ".mov";
+
 
             DirectoryInfo di = new DirectoryInfo(dirName);
             FileInfo[] fi;
@@ -613,7 +676,7 @@ namespace HDTrailersNETDownloader
 
             //Assuming we downloaded the trailer OK and the config has been set to grab posters...
             if ( (tempBool) && (config.GrabPoster))
-                GetPoster(posterUrl, dirName);
+                GetPoster(posterUrl, dirName, fName);
 
             return tempBool;
         }
@@ -632,11 +695,13 @@ namespace HDTrailersNETDownloader
             return null;
         }
 
-        static void GetPoster(string source, string downloadPath)
+        static void GetPoster(string source, string downloadPath, string filename)
         {
             try
             {
-                string fname = downloadPath + pathsep +@"folder.jpg";
+//              String fname = BuildFileName(filename, downloadPath, "jpg");
+                string fname = downloadPath + pathsep + filename;
+                fname = Path.ChangeExtension(fname, "jpg");
 
                 if ((source == null) || (source.Length == 0))
                 {

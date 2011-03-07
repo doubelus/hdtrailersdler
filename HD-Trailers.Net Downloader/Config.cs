@@ -4,6 +4,10 @@ using System.Collections.Specialized;
 using System.Globalization;
 using System.Text;
 using System.Configuration;
+using System.IO;
+using System.Linq;
+using System.Xml.Linq;
+
 
 namespace HDTrailersNETDownloader
 {
@@ -20,9 +24,12 @@ namespace HDTrailersNETDownloader
         public int KeepFor { get; private set; }
         public bool GrabPoster { get; private set; }
         public bool XBMCFilenames { get; private set; }
+        public bool CreateXBMCNfoFile { get; private set; }
         public bool UseExclusions { get; private set; }
         public bool TrailersOnly { get; private set; }
         public bool StrictTrailersOnly { get; private set; }
+        public string IncludeGenres { get; private set; }
+        public string ExcludeGenres { get; private set; }
         public int MinTrailerSize { get; private set; }
         public bool EmailSummary { get; private set; }
         public string EmailAddress { get; private set; }
@@ -37,37 +44,43 @@ namespace HDTrailersNETDownloader
         public bool RunOnlyWhenNewTrailers { get; private set; }
         public string Executable { get; private set; }
         public string EXEArguements { get; private set; }
-
-
+        protected string temp;
         public Config()
         {
             this.PhysicalLog = false;
         }
 
         // return a string from a NameValue
-        private string GetStringFromAppsettings(NameValueCollection coll, string name, string def)
+        private string GetStringFromAppsettings(XElement coll, string name, string def)
         {
-            string ret = coll[name];
-            if (ret == null)
+            String value;
+            value = (from c in coll.Elements("appSettings").Elements("add")
+                     where (string)c.Attribute("key").Value == name
+                     select new
+                     {
+                         configValue = (string)c.Attribute("value").Value
+
+                     }).Select(c => c.configValue).FirstOrDefault<String>();
+            if (value == null)
                 return def;
-            return ret;
+            return value;
         }
 
         // return a bool from a NameValue
-        private Boolean GetBooleanFromAppsettings(NameValueCollection coll, string name, string def)
+        private Boolean GetBooleanFromAppsettings(XElement coll, string name, string def)
         {
             string ret = GetStringFromAppsettings(coll, name, def);
             return Convert.ToBoolean(ret, CultureInfo.InvariantCulture);
         }
 
         // return a bool from a NameValue
-        private Int32 GetInt32FromAppsettings(NameValueCollection coll, string name, string def)
+        private Int32 GetInt32FromAppsettings(XElement coll, string name, string def)
         {
             string ret = GetStringFromAppsettings(coll, name, def);
             return Convert.ToInt32(ret, CultureInfo.InvariantCulture);
         }
 
-        private string[] GetStringArrayFromAppsettings(NameValueCollection coll, string name, string def)
+        private string[] GetStringArrayFromAppsettings(XElement coll, string name, string def)
         {
             string[] ret;
             string res = GetStringFromAppsettings(coll, name, def);
@@ -80,19 +93,44 @@ namespace HDTrailersNETDownloader
 
             return ret;
         }
-
         public void Init()
         {
             //Load our config
             // Get the AppSettings section.
-            NameValueCollection appSetting = ConfigurationManager.AppSettings;
+            Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            NameValueCollection origappSetting = ConfigurationManager.AppSettings;
 
-            this.QualityPreference = GetStringArrayFromAppsettings(appSetting, "QualityPreference", "720p,480p");
+            temp = System.Environment.GetFolderPath(System.Environment.SpecialFolder.CommonApplicationData);
+            string localAppData;
+            localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string userFilePath = Path.Combine(localAppData, "HD-Trailers.Net Downloader");
+
+            if (!Directory.Exists(userFilePath)) {
+                Directory.CreateDirectory(userFilePath);
+            }
+            if (!File.Exists(Path.Combine(userFilePath, "HD-Trailers.Net Downloader.config")))
+            {
+                if (File.Exists(config.FilePath)) {
+                    File.Copy(config.FilePath, Path.Combine(userFilePath, "HD-Trailers.Net Downloader.config"));
+                    Environment.Exit(0);
+                }
+            }
+
+            //TextWriter tw = new StreamWriter(Path.Combine(userFilePath, "HD-Trailers.Net Downloader.CMD"));
+            // write a line of text to the file
+            //tw.WriteLine(Path.Combine(temp, "HD-Trailers.Net Downloader.exe"));
+            // close the stream
+            //tw.Close();
+
+            XElement appSetting = System.Xml.Linq.XElement.Load(Path.Combine(userFilePath, "HD-Trailers.Net Downloader.config"));
+
+             this.QualityPreference = GetStringArrayFromAppsettings(appSetting, "QualityPreference", "720p,480p");
             this.SitesToSkip = GetStringArrayFromAppsettings(appSetting, "SitesToSkip", "");
             this.TrailerDownloadFolder = GetStringFromAppsettings(appSetting, "TrailerDownloadFolder", "c:\\Trailers").TrimEnd('\\');
             this.MetadataDownloadFolder = GetStringFromAppsettings(appSetting, "MetadataDownloadFolder", "c:\\Trailers").TrimEnd('\\');
             this.GrabPoster = GetBooleanFromAppsettings(appSetting, "GrabPoster", "true");
-            this.XBMCFilenames = GetBooleanFromAppsettings(appSetting, "XBMCFilenames", "false");
+            this.XBMCFilenames = GetBooleanFromAppsettings(appSetting, "XBMCFileNames", "false");
+            this.CreateXBMCNfoFile = GetBooleanFromAppsettings(appSetting, "CreateXBMCNfoFile", "true");
             this.CreateFolder = GetBooleanFromAppsettings(appSetting, "CreateFolder", "true");
             this.VerboseLogging = GetBooleanFromAppsettings(appSetting, "VerboseLogging", "true");
             this.PhysicalLog = GetBooleanFromAppsettings(appSetting, "PhysicalLog", "true");
@@ -101,7 +139,9 @@ namespace HDTrailersNETDownloader
             this.MinTrailerSize = GetInt32FromAppsettings(appSetting, "MinTrailerSize", "100000");
             this.UseExclusions = GetBooleanFromAppsettings(appSetting, "UseExclusions", "true");
             this.TrailersOnly = GetBooleanFromAppsettings(appSetting, "TrailersOnly", "true");
-            this.StrictTrailersOnly = GetBooleanFromAppsettings(appSetting, "StrictTrailersOnly", "true");
+            this.StrictTrailersOnly = GetBooleanFromAppsettings(appSetting, "StrictTrailersOnly", "False");
+            this.IncludeGenres = GetStringFromAppsettings(appSetting, "DownloadSpecifiedGenresOnly", "all");
+            this.ExcludeGenres = GetStringFromAppsettings(appSetting, "DownloadSpecifiedGenresOnly", "none");
             this.EmailSummary = GetBooleanFromAppsettings(appSetting, "EmailSummary", "false");
             this.EmailAddress = GetStringFromAppsettings(appSetting, "EmailAddress", "");
             this.SMTPServer = GetStringFromAppsettings(appSetting, "SMTPServer", "");

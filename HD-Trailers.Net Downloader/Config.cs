@@ -24,6 +24,8 @@ namespace HDTrailersNETDownloader
         public int KeepFor { get; private set; }
         public bool GrabPoster { get; private set; }
         public bool XBMCFilenames { get; private set; }
+        public string IfIMDBMissingMPAARatingUse { get; private set; }
+        public bool AppendTrailerQuality { get; private set; }
         public bool CreateXBMCNfoFile { get; private set; }
         public bool UseExclusions { get; private set; }
         public bool TrailersOnly { get; private set; }
@@ -105,16 +107,16 @@ namespace HDTrailersNETDownloader
             localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string userFilePath = Path.Combine(localAppData, "HD-Trailers.Net Downloader");
 
-            if (!Directory.Exists(userFilePath)) {
-                Directory.CreateDirectory(userFilePath);
-            }
-            if (!File.Exists(Path.Combine(userFilePath, "HD-Trailers.Net Downloader.config")))
-            {
-                if (File.Exists(config.FilePath)) {
-                    File.Copy(config.FilePath, Path.Combine(userFilePath, "HD-Trailers.Net Downloader.config"));
-                    Environment.Exit(0);
-                }
-            }
+//            if (!Directory.Exists(userFilePath)) {
+//                Directory.CreateDirectory(userFilePath);
+//           }
+//            if (!File.Exists(Path.Combine(userFilePath, "HD-Trailers.Net Downloader.config")))
+//            {
+//                if (File.Exists(config.FilePath)) {
+//                    File.Copy(config.FilePath, Path.Combine(userFilePath, "HD-Trailers.Net Downloader.config"));
+//                    Environment.Exit(0);
+//                }
+//            }
 
             //TextWriter tw = new StreamWriter(Path.Combine(userFilePath, "HD-Trailers.Net Downloader.CMD"));
             // write a line of text to the file
@@ -131,6 +133,8 @@ namespace HDTrailersNETDownloader
             this.GrabPoster = GetBooleanFromAppsettings(appSetting, "GrabPoster", "true");
             this.XBMCFilenames = GetBooleanFromAppsettings(appSetting, "XBMCFileNames", "false");
             this.CreateXBMCNfoFile = GetBooleanFromAppsettings(appSetting, "CreateXBMCNfoFile", "true");
+            this.IfIMDBMissingMPAARatingUse = GetStringFromAppsettings(appSetting, "IfIMDBMissingMPAARatingUse", "");
+            this.AppendTrailerQuality = GetBooleanFromAppsettings(appSetting, "AppendTrailerQuality", "true");
             this.CreateFolder = GetBooleanFromAppsettings(appSetting, "CreateFolder", "true");
             this.VerboseLogging = GetBooleanFromAppsettings(appSetting, "VerboseLogging", "true");
             this.PhysicalLog = GetBooleanFromAppsettings(appSetting, "PhysicalLog", "true");

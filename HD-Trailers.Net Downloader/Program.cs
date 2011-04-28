@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 
 
 
+
 namespace HDTrailersNETDownloader
 {
     class Program
@@ -27,7 +28,7 @@ namespace HDTrailersNETDownloader
 
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
-        static string Version = "HD-Trailers.Net Downloader v1.1";
+        static string Version = "HD-Trailers.Net Downloader v1.8";
         static int NewTrailerCount = 0;
         [PreEmptive.Attributes.Setup(CustomEndpoint = "so-s.info/PreEmptive.Web.Services.Messaging/MessagingServiceV2.asmx")]
         [PreEmptive.Attributes.Teardown()]
@@ -44,6 +45,9 @@ namespace HDTrailersNETDownloader
                 log.WriteLine(Version);
                 log.WriteLine("CodePlex: http://www.codeplex.com/hdtrailersdler");
                 log.WriteLine("HD Trailer Blog: http://www.hd-trailers.net");
+                log.WriteLine("Program Icon: http://jamespeng.deviantart.com");
+                log.WriteLine("C# IMDB Scraper: http://web3o.blogspot.com/2010/11/aspnetc-imdb-scraping-api.html");
+                log.WriteLine("Program Icon: http://jamespeng.deviantart.com");
                 log.WriteLine("");
 
                 log.WriteLine("CommonApplicateData: " + System.Environment.GetFolderPath(System.Environment.SpecialFolder.CommonApplicationData));
@@ -240,8 +244,15 @@ namespace HDTrailersNETDownloader
             log.WriteLine("");
             log.WriteLine("Next trailer: " + title);
 
+            if ((config.TrailersOnly) && (!title.Contains("Trailer")))
+            {
+                log.WriteLine("Title not a trailer. Skipping...");
+                AddToEmailSummary(title + " (" + qualPreference + ") : Title not a trailer. Skipping...");
+                return;
+            }
+
             NameValueCollection nvc;
-            nvc = GetDownloadUrls(link);
+            nvc = GetDownloadUrls(link, title);
             if ((nvc == null) || (nvc.Count == 0))
             {
                 log.WriteLine("Error: No Download URLs found. Skipping...");
@@ -262,7 +273,6 @@ namespace HDTrailersNETDownloader
             string fname = LegalFileName(title);
             string dirName = ManageDirectory(fname);
 
-            
             // Compare download url to sitestoskip item in config. If match detected, skip and log.
             for (int t = 0; t < config.SitesToSkip.Count(); t++)
                 if (tempTrailerURL.Contains(config.SitesToSkip[t]))
@@ -284,12 +294,6 @@ namespace HDTrailersNETDownloader
             {
                 log.WriteLine("Title found in exclusions list. Skipping...");
                 AddToEmailSummary(title + " (" + qualPreference + ") : Title found in exclusions list. Skipping...");
-                return;
-            }
-            if ((config.TrailersOnly) && (!title.Contains("Trailer")))
-            {
-                log.WriteLine("Title not a trailer. Skipping...");
-                AddToEmailSummary(title + " (" + qualPreference + ") : Title not a trailer. Skipping...");
                 return;
             }
             if((config.IncludeGenres.IndexOf("all", StringComparison.OrdinalIgnoreCase) >= 0) || (config.ExcludeGenres.IndexOf("none", StringComparison.OrdinalIgnoreCase) >= 0) || config.CreateXBMCNfoFile) {
@@ -346,27 +350,49 @@ namespace HDTrailersNETDownloader
                 log.WriteLine(title + " (" + qualPreference + ") : Downloaded");
                 AddToEmailSummary(title + " (" + qualPreference + ") : Downloaded");
             }
-            if (tempBool && config.CreateXBMCNfoFile)
-            {
-                NfoMovie NFOTrailer = new NfoMovie();
+            if (tempBool && config.CreateXBMCNfoFile) {
                 NfoFile NFOTrailerFile = new NfoFile();
-                NFOTrailer.Title = imdb.Title;
-                NFOTrailer.Quality = qualPreference;
-                NFOTrailer.Rating = imdb.Rating;
-                NFOTrailer.Year = imdb.Year;
-                NFOTrailer.Top250 = imdb.Top250;
-                NFOTrailer.Votes = imdb.Votes;
-                NFOTrailer.Plot = imdb.Plot;
-                NFOTrailer.Tagline = imdb.Tagline;
-                NFOTrailer.Runtime = imdb.Runtime;
-                NFOTrailer.Mpaa = imdb.MpaaRating;
-                NFOTrailer.Id = imdb.Id;
-                NFOTrailer.Runtime = imdb.Runtime;
-                string[] strStrings = imdb.Genres.ToArray(typeof(string)) as string[];
-                string JoinedString = String.Join(" / ", strStrings);
-                NFOTrailer.Genre = JoinedString;
-                String NfoName = MakeFileName(".nfo", fname, dirName, qualPreference);
-                NFOTrailerFile.saveNfoMovie(NFOTrailer, dirName + pathsep + NfoName);
+                if (imdb.Id != null)
+                {
+                    NfoMovie NFOTrailer = new NfoMovie();
+
+                    NFOTrailer.Title = imdb.Title;
+                    NFOTrailer.Quality = qualPreference;
+                    NFOTrailer.Rating = imdb.Rating;
+                    NFOTrailer.Year = imdb.Year;
+                    NFOTrailer.Releasedate = imdb.ReleaseDate;
+                    NFOTrailer.Top250 = imdb.Top250;
+                    NFOTrailer.Votes = imdb.Votes;
+                    NFOTrailer.Plot = imdb.Plot;
+                    NFOTrailer.Tagline = imdb.Tagline;
+                    NFOTrailer.Runtime = imdb.Runtime;
+                    if (imdb.MpaaRating.Length == 0)
+                    {
+                        if (config.IfIMDBMissingMPAARatingUse.Length != 0)
+                        {
+                            NFOTrailer.Mpaa = config.IfIMDBMissingMPAARatingUse;
+                        }
+                        else
+                        {
+                            NFOTrailer.Mpaa = "";
+                        }
+
+
+                    }
+                    else
+                    {
+                        NFOTrailer.Mpaa = imdb.MpaaRating;
+                    }
+
+                    NFOTrailer.Id = imdb.Id;
+                    NFOTrailer.Runtime = imdb.Runtime;
+                    string[] strStrings = imdb.Genres.ToArray(typeof(string)) as string[];
+                    string JoinedString = String.Join(" / ", strStrings);
+                    NFOTrailer.Genre = JoinedString;
+                    String NfoName = MakeFileName(".nfo", fname, dirName, qualPreference);
+                    //                  String NfoName = BuildFileName(fname, dirName, ".nfo");
+                    NFOTrailerFile.saveNfoMovie(NFOTrailer, dirName + pathsep + NfoName);
+                }
             }
 
         }
@@ -420,7 +446,7 @@ namespace HDTrailersNETDownloader
         /// <param name="link"></param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        static NameValueCollection GetDownloadUrls(string link)
+        static NameValueCollection GetDownloadUrls(string link, string title)
         {
             try
             {
@@ -430,7 +456,12 @@ namespace HDTrailersNETDownloader
                 string data = ReadDataFromLink(link);
                 // CurrentSource = data;
 
+//  Original line iaj 04/06/2010
                 int pos = data.IndexOf(@"Download</strong>:");
+//                String MovieName = "The Pruitt-Igoe Myth";
+//                Regex reg = new Regex("\\(([^)]*)\\)");
+//                string MovieName = reg.Replace(title, "");
+//                int pos = data.IndexOf("title=\"" + MovieName + "\" alt=\"" + MovieName + "\">");
                 if (pos == -1)
                     return nvc;
 
@@ -521,15 +552,22 @@ namespace HDTrailersNETDownloader
         }
         static string MakeFileName(string upperDownloadUrl, string fName, string dirName, string qualPref)
         {
+            if (config.AppendTrailerQuality)
+            {
+                qualPref = "_" + qualPref;
+            } else {
+                qualPref = "";
+            }
             if (upperDownloadUrl.Contains(".WMV"))
-                fName = fName + "_" + qualPref + ".wmv";
+                fName = fName + qualPref + ".wmv";
             else if (upperDownloadUrl.Contains(".ZIP"))
-                fName = fName + "_" + qualPref + ".zip";
+                fName = fName + qualPref + ".zip";
             else if (upperDownloadUrl.Contains(".nfo"))
-                fName = fName + "_" + qualPref + ".nfo";
+                fName = fName + qualPref + ".nfo";
+            else if (upperDownloadUrl.Contains(".mp4"))
+                fName = fName + qualPref + ".mp4";
             else
-                fName = fName + "_" + qualPref + ".mov";
-
+                fName = fName + qualPref + ".mov";
 
             DirectoryInfo di = new DirectoryInfo(dirName);
             FileInfo[] fi;
@@ -548,7 +586,8 @@ namespace HDTrailersNETDownloader
             {
                 fName = DateTime.Now.ToString("yyyy-MM-dd") + " " + fName;
             }
-            if (config.XBMCFilenames)
+            if (fName.Contains(".nfo")) return fName;
+                if (config.XBMCFilenames)
             {
                 fName = fName.Insert(fName.Length-4, "-trailer");
             }
@@ -699,10 +738,18 @@ namespace HDTrailersNETDownloader
         {
             try
             {
-//              String fname = BuildFileName(filename, downloadPath, "jpg");
-                string fname = downloadPath + pathsep + filename;
-                fname = Path.ChangeExtension(fname, "jpg");
-
+                 String fname;
+                 if (config.CreateFolder)
+                 {
+                     fname = downloadPath + pathsep + @"folder.jpg";
+                 }
+                 else
+                 {
+                     //fname = BuildFileName(filename, downloadPath, "jpg");
+                     fname = Path.ChangeExtension(filename, "jpg");
+                     fname = downloadPath + pathsep + fname;
+                     //                string fname = downloadPath + pathsep + filename;
+                 }
                 if ((source == null) || (source.Length == 0))
                 {
                     log.VerboseWrite("No poster url found. Skipping....");

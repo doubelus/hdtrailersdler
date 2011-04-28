@@ -1,0 +1,41 @@
+12/21/2010 10:36:09 PM - Config loaded
+12/21/2010 10:36:09 PM - 
+QualityPreference: 720p   480p   
+TrailerDownloadFolder: g:\trailers
+MetadataDownloadFolder: g:\trailers
+GrabPoster: True
+CreateFolder: False
+VerboseLogging: True
+PhysicalLog: True
+PauseWhenDone: True
+KeepFor: 30
+UseExclusions: True
+TrailersOnly: False
+MinTrailerSize: 100000
+AddDates: True
+AddDates: True
+UserAgendId(1): apple.com
+UserAgentString(1): QuickTime/7.6.2
+EmailAddress: your@email-address.com
+EmailSummary: False
+SMTPServer: your.smtp.server.net
+EmailReturnAddress: fake_addr@trailers.com
+EmailReturnDisplayName: HD-Trailer.NET Downloader
+
+12/21/2010 10:36:09 PM - Using exclusions...
+12/21/2010 10:36:09 PM - 0 exclusions loaded.
+
+12/21/2010 10:36:09 PM - Delete option selected. Deleting files/folders older than: 30 days
+12/21/2010 10:36:12 PM - RSS feed items (20) from http://www.hd-trailers.net/blog/feed/ grabbed successfully
+
+12/21/2010 10:36:12 PM - Next trailer: The Lincoln Lawyer (Trailer 2)
+12/21/2010 10:36:13 PM - 
+    480p       http://trailers.apple.com/movies/lionsgate/thelincolnlawyer/lincolnlawyer-tlr2_h480p.mov
+    720p       http://trailers.apple.com/movies/lionsgate/thelincolnlawyer/lincolnlawyer-tlr2_h720p.mov
+    1080p      http://trailers.apple.com/movies/lionsgate/thelincolnlawyer/lincolnlawyer-tlr2_h1080p.mov
+    poster     http://trailers.apple.com/trailers/lions_gate/thelincolnlawyer/images/poster.jpg
+
+12/21/2010 10:36:13 PM - Extracted download url (720p): http://trailers.apple.com/movies/lionsgate/thelincolnlawyer/lincolnlawyer-tlr2_h720p.mov
+12/21/2010 10:36:13 PM - Local directory: g:\trailers
+12/21/2010 10:36:13 PM - Filename : 2010-12-21 The Lincoln Lawyer (Trailer 2)_720p.mov
+12/21/2010 10:36:14 PM - 46088035 bytes of 109227524 located on disk. Resuming...

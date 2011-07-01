@@ -29,7 +29,10 @@ namespace HDTrailersNETDownloader
         public bool CreateXBMCNfoFile { get; private set; }
         public bool UseExclusions { get; private set; }
         public bool TrailersOnly { get; private set; }
-        public bool StrictTrailersOnly { get; private set; }
+        public bool TrailersIdenticaltoTheatricalTrailers { get; private set; }
+        public bool SkipTheatricalTrailers { get; private set; }
+        public bool SkipTeaserTrailers { get; private set; }
+        public bool ConsiderTheatricalandNumberedTrailersasIdentical { get; private set; }
         public string IncludeGenres { get; private set; }
         public string ExcludeGenres { get; private set; }
         public int MinTrailerSize { get; private set; }
@@ -143,7 +146,10 @@ namespace HDTrailersNETDownloader
             this.MinTrailerSize = GetInt32FromAppsettings(appSetting, "MinTrailerSize", "100000");
             this.UseExclusions = GetBooleanFromAppsettings(appSetting, "UseExclusions", "true");
             this.TrailersOnly = GetBooleanFromAppsettings(appSetting, "TrailersOnly", "true");
-            this.StrictTrailersOnly = GetBooleanFromAppsettings(appSetting, "StrictTrailersOnly", "False");
+            this.TrailersIdenticaltoTheatricalTrailers = GetBooleanFromAppsettings(appSetting, "TrailersIdenticaltoTheatricalTrailers", "False");
+            this.SkipTheatricalTrailers = GetBooleanFromAppsettings(appSetting, "SkipTheatricalTrailers", "False");
+            this.SkipTeaserTrailers = GetBooleanFromAppsettings(appSetting, "SkipTeaserTrailers", "False");
+            this.ConsiderTheatricalandNumberedTrailersasIdentical = GetBooleanFromAppsettings(appSetting, "ConsiderTheatricalandNumberedTrailersasIdentical", "False");
             this.IncludeGenres = GetStringFromAppsettings(appSetting, "DownloadSpecifiedGenresOnly", "all");
             this.ExcludeGenres = GetStringFromAppsettings(appSetting, "DownloadSpecifiedGenresOnly", "none");
             this.EmailSummary = GetBooleanFromAppsettings(appSetting, "EmailSummary", "false");
@@ -180,7 +186,10 @@ namespace HDTrailersNETDownloader
             sb.AppendFormat("{0}: {1}\n", "KeepFor", KeepFor.ToString());
             sb.AppendFormat("{0}: {1}\n", "UseExclusions", UseExclusions.ToString());
             sb.AppendFormat("{0}: {1}\n", "TrailersOnly", TrailersOnly.ToString());
-            sb.AppendFormat("{0}: {1}\n", "StrictTrailersOnly", StrictTrailersOnly.ToString());
+            sb.AppendFormat("{0}: {1}\n", "TrailersIdenticaltoTheatricalTrailers", TrailersIdenticaltoTheatricalTrailers.ToString());
+            sb.AppendFormat("{0}: {1}\n", "SkipTheatricalTrailers", SkipTheatricalTrailers.ToString());
+            sb.AppendFormat("{0}: {1}\n", "SkipTeaserTrailers", SkipTeaserTrailers.ToString());
+            sb.AppendFormat("{0}: {1}\n", "ConsiderTheatricalandNumberedTrailersasIdentical", ConsiderTheatricalandNumberedTrailersasIdentical.ToString());
             sb.AppendFormat("{0}: {1}\n", "MinTrailerSize", MinTrailerSize.ToString());
             sb.AppendFormat("{0}: {1}\n", "AddDates", AddDates.ToString());
             if ((UserAgentId == null) || (UserAgentId.Length == 0))

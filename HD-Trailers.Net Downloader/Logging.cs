@@ -8,7 +8,7 @@ namespace HDTrailersNETDownloader
 {
     class Logging
     {
-        private bool verboseLogging;
+        bool verboseLogging;
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         private bool physicalLog;
         private FileStream logFS;

@@ -79,6 +79,7 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="PreEmptive.Attributes">
       <HintPath>Properties\PreEmptive.Attributes.dll</HintPath>
     </Reference>
@@ -111,6 +112,11 @@
     <Compile Include="Class2.cs" />
     <Compile Include="Class3.cs" />
     <Compile Include="Class4.cs" />
+    <Compile Include="fetcher_GenericFetcher.cs" />
+    <Compile Include="fetcher_HDTrailersNet.cs" />
+    <Compile Include="fetcher_MovieMazeDe.cs" />
+    <Compile Include="fetcher_TrailerFreakRSS.cs" />
+    <Compile Include="StringFunctions.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Logging.cs" />
     <Compile Include="Program.cs" />
@@ -118,9 +124,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="trailer.ico" />
-    <None Include="C:\Users\Ian\AppData\Local\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader.config">
+    <None Include="App.config">
       <SubType>Designer</SubType>
-      <Link>bin\Release\HD-Trailers.Net Downloader.config</Link>
+    </None>
+    <None Include="bin\Release\HD-Trailers.Net Downloader.exe.config">
+      <SubType>Designer</SubType>
     </None>
     <None Include="HD-Trailers.Net Downloader_TemporaryKey.pfx" />
     <None Include="Properties\app.manifest" />

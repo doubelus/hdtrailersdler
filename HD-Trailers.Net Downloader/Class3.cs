@@ -25,7 +25,8 @@ namespace HDTrailersNETDownloader
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.StackTrace);
+                Program.log.WriteLine("Unhandled exception in Serializer. Application will close ....");
+                Program.log.WriteLine("Exception: " + e.ToString());
             }
         }
 
@@ -39,9 +40,10 @@ namespace HDTrailersNETDownloader
                 r.Close();
                 return obj;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Console.WriteLine("ERROR in: " + path);
+                Program.log.WriteLine("Unhandled exception in Serializer FromFile. Application will close ....");
+                Program.log.WriteLine("Exception: " + e.ToString());
                 return null;
             }
         }
@@ -57,8 +59,8 @@ namespace HDTrailersNETDownloader
             }
             catch (Exception e)
             {
-                Console.WriteLine("ERROR in: " + path);
-                Console.WriteLine(e.StackTrace);
+                Program.log.WriteLine("Unhandled exception in Serializer ToFile. Application will close ....");
+                Program.log.WriteLine("Exception: " + e.ToString());
                 return false;
             }
         }

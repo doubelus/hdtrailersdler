@@ -78,10 +78,15 @@ namespace HDTrailersNETDownloader
         
         public bool ImdbLookup(string MovieName, bool GetExtraInfo = true)
         {
-            string imdbUrl = getIMDbUrlFromBing(MovieName);
-            if (!string.IsNullOrEmpty(imdbUrl))
+            string imdburl;
+            if((MovieName.Length == 9) && (MovieName.Substring(0, 2) == "tt")) {
+                imdburl = "http://www.imdb.com/title/" + MovieName + "/";
+            } else {
+                imdburl = getIMDbUrlFromBing(MovieName);
+            }
+            if (!string.IsNullOrEmpty(imdburl))
             {
-                string html = getUrlData(imdbUrl);
+                string html = getUrlData(imdburl);
                 parseIMDbPage(html, GetExtraInfo);
             }
             return true;

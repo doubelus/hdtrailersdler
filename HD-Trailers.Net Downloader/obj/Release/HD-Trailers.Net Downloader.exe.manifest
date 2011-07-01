@@ -43,14 +43,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="HD-Trailers.Net Downloader.exe" size="298496">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="HD-Trailers.Net Downloader.exe" size="306176">
       <assemblyIdentity name="HD-Trailers.Net Downloader" version="1.2.0.0" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>y11UF+yzaSO1DWhgHRH/fojkggg=</dsig:DigestValue>
+        <dsig:DigestValue>qOB9yM5bBGrG3pXJ6fKNzkS2NRA=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -90,6 +90,15 @@
       </hash>
     </dependentAssembly>
   </dependency>
+  <file name="HD-Trailers.Net Downloader.exe.config" size="447">
+    <hash>
+      <dsig:Transforms>
+        <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+      </dsig:Transforms>
+      <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+      <dsig:DigestValue>HpEaaOeOH5m9bwjY6DsuEr6Wn3c=</dsig:DigestValue>
+    </hash>
+  </file>
   <file name="trailer.ico" size="248660">
     <hash>
       <dsig:Transforms>

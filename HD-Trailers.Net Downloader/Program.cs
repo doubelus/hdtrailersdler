@@ -11,6 +11,7 @@ using System.Net.Mail;
 using System.Globalization;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using Microsoft.VisualBasic.FileIO;
 
 
 
@@ -20,11 +21,12 @@ namespace HDTrailersNETDownloader
     class Program
     {
         static Config config = new Config();
-        static Logging log = new Logging();
+        static public Logging log = new Logging();
         static ArrayList Exclusions = new ArrayList();
         static IMDb imdb = new IMDb();
         static NfoMovie NFOTrailer = new NfoMovie();
         static NfoFile NFOTrailerFile = new NfoFile();
+        static trailerFreakRSS itemsTF = new trailerFreakRSS();
 
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
@@ -37,11 +39,10 @@ namespace HDTrailersNETDownloader
             try
             {
 
-                RssItems feedItems;
+ //               RssItems feedItems;
                 string AppDatadirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader");
                 if (!Init())
                     return;
-
                 log.WriteLine(Version);
                 log.WriteLine("CodePlex: http://www.codeplex.com/hdtrailersdler");
                 log.WriteLine("HD Trailer Blog: http://www.hd-trailers.net");
@@ -59,12 +60,23 @@ namespace HDTrailersNETDownloader
 
                 //Delete folders/files if needed
                 DeleteEm();
-                feedItems = GetFeedItems(config.FeedAddress);
-                log.VerboseWrite("RSS feed items (" + feedItems.Count.ToString() + ") from "+ config.FeedAddress +" grabbed successfully");
-
-                for (int i = 0; i < feedItems.Count; i++)
+                trailerFreakRSS itemsMM = new trailerFreakRSS();
+                itemsMM.GetFeedItems(config.FeedAddress);
+                for (int i = 0; i < itemsMM.Count && i < 30; i++)
                 {
-                    ProcessFeedItem(feedItems[i].Title, feedItems[i].Link);
+                    log.WriteLine(itemsMM[i].name);
+                    log.WriteLine(" number of links:" + itemsMM[i].nvc.Count.ToString());
+                    for (int j = 0; j < itemsMM[i].nvc.Count; j++)
+                        log.WriteLine(" " + i.ToString() + ".item:" + itemsMM[i].nvc.GetKey(j).ToString() + " " + itemsMM[i].nvc.Get(j).ToString());
+                }
+
+//                feedItems = GetFeedItems(config.FeedAddress);
+//                log.VerboseWrite("RSS feed items (" + feedItems.Count.ToString() + ") from "+ config.FeedAddress +" grabbed successfully");
+
+                for (int i = 0; i < itemsMM.Count; i++)
+                {
+                    ProcessFeedItem(itemsMM[i].name, itemsMM[i]);
+//                    ProcessFeedItem(feedItems[i].Title, feedItems[i].Link);
                 }
                 //Do housekeeping like serializing exclusions and sending email summary
                 log.VerboseWrite("");
@@ -96,7 +108,7 @@ namespace HDTrailersNETDownloader
         /// <summary>
         /// read data from appconfig. configure the logging object according to the appconfig information
         /// </summary>
-        static bool Init()
+        public static bool Init()
         {
             try
             {
@@ -172,7 +184,8 @@ namespace HDTrailersNETDownloader
                     {
                         if ((Directory.GetCreationTime(dirList[i]).AddDays(config.KeepFor)) < DateTime.Now)
                         {
-                            Directory.Delete(dirList[i], true);
+                            FileSystem.DeleteDirectory(dirList[i], Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs, Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
+//                            Directory.Delete(dirList[i], true);
                             if (config.VerboseLogging)
                                 log.WriteLine("Deleted directory: " + dirList[i]);
                         }
@@ -183,7 +196,8 @@ namespace HDTrailersNETDownloader
                     {
                         if ((File.GetCreationTime(fileList[i]).AddDays(config.KeepFor)) < DateTime.Now && !fileList[i].Contains("folder"))
                         {
-                            File.Delete(fileList[i]);
+                            FileSystem.DeleteFile(fileList[i], Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs, Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
+//                            File.Delete(fileList[i]);
                             if (config.VerboseLogging)
                                 log.WriteLine("Deleted file: " + fileList[i]);
                         }
@@ -237,10 +251,11 @@ namespace HDTrailersNETDownloader
             return dirName;
         }
 
-        static void ProcessFeedItem(string title, string link)
+ //      static void ProcessFeedItem(string title, string link)
+        static void ProcessFeedItem(string title, MovieItem link)
         {
             string qualPreference = "";
-
+            string newtitle;
             log.WriteLine("");
             log.WriteLine("Next trailer: " + title);
 
@@ -252,7 +267,8 @@ namespace HDTrailersNETDownloader
             }
 
             NameValueCollection nvc;
-            nvc = GetDownloadUrls(link, title);
+//            nvc = GetDownloadUrls(link, title);
+            nvc = link.nvc;
             if ((nvc == null) || (nvc.Count == 0))
             {
                 log.WriteLine("Error: No Download URLs found. Skipping...");
@@ -282,7 +298,6 @@ namespace HDTrailersNETDownloader
                     return;
 
                 }
-            
 
             if (tempTrailerURL == null)
             {
@@ -290,10 +305,53 @@ namespace HDTrailersNETDownloader
                 AddToEmailSummary(title + " (" + qualPreference + ") : Not available. Skipping...");
                 return;
             }
-            if (Exclusions.Contains(title))
+            if ((config.SkipTheatricalTrailers) && (title.Contains("Theatrical")))
+            {
+                log.WriteLine("Skip Theatrical Trailers set. Skipping...");
+                AddToEmailSummary(title + ": Skip Theatrical Trailers set. Skipping...");
+                return;
+            }
+            if ((config.SkipTeaserTrailers) && (title.Contains("Teaser")))
+            {
+                log.WriteLine("Skip Teaser Trailers set. Skipping...");
+                AddToEmailSummary(title + ": Skip Teaser Trailers set. Skipping...");
+                return;
+            }
+//  This is test code to 
+//            string myString;
+//            myString = title;
+//            string input = "Super 8 (Theatrical Trailer No 1)";
+//            string regex = "(\\[.*\\])|(\".*\")|('.*')|(\\(.*\\))";
+//            output = Regex.Replace(input, regex, "(Trailer)");
+//            string str2 = myString.Remove(myString.IndexOf("Trailer") + "Trailer".Length) + ")";
+//            str2 = myString.Remove(myString.IndexOf("("), myString.IndexOf("Trailer")- myString.IndexOf("(") );
+//            myString = title;
+//            output = myString.Remove(myString.IndexOf("(") + 1, myString.IndexOf("Trailer") - myString.IndexOf("(") - 1);
+
+            if (config.TrailersIdenticaltoTheatricalTrailers)
+            {
+                newtitle = title.Replace("Theatrical ", "");
+            }
+            else
+            {
+                newtitle = title;
+            }
+            if (config.ConsiderTheatricalandNumberedTrailersasIdentical)
+            {
+                if(!newtitle.Contains("Teaser")) {
+                    string regex = "(\\[.*\\])|(\".*\")|('.*')|(\\(.*\\))";
+                    newtitle = Regex.Replace(newtitle, regex, "(Trailer)");
+                }
+            }
+            else
+            {
+                newtitle = title;
+            }
+
+            if (Exclusions.Contains(newtitle))
             {
                 log.WriteLine("Title found in exclusions list. Skipping...");
-                AddToEmailSummary(title + " (" + qualPreference + ") : Title found in exclusions list. Skipping...");
+                AddToEmailSummary(title + ": Title found in exclusions list. Skipping...");
                 return;
             }
             if((config.IncludeGenres.IndexOf("all", StringComparison.OrdinalIgnoreCase) >= 0) || (config.ExcludeGenres.IndexOf("none", StringComparison.OrdinalIgnoreCase) >= 0) || config.CreateXBMCNfoFile) {
@@ -301,7 +359,11 @@ namespace HDTrailersNETDownloader
                 string MovieName = reg.Replace(fname, "");
 //                String MovieName = "The Pruitt-Igoe Myth";
                 MovieName.Trim();
-                imdb.ImdbLookup(MovieName);
+                if(link.imdbId.Length > 0) {
+                    imdb.ImdbLookup(link.imdbId);
+                } else {
+                   imdb.ImdbLookup(MovieName);
+                }
             }
             if(!(config.IncludeGenres.IndexOf("all", StringComparison.OrdinalIgnoreCase) >= 0))
             {
@@ -311,13 +373,6 @@ namespace HDTrailersNETDownloader
             {
                 if (imdb.isGenre(config.ExcludeGenres)) return;
             }
-
-//            if ((config.StrictTrailersOnly) && !(title.Contains("(Theatrical Trailer)") || title.Contains("(Trailer)")))
-//            {
-//                log.WriteLine("Strict Trailers Only set. Skipping...");
-//                AddToEmailSummary(title + " (" + qualPreference + ") : Strict Trailers Only set. Skipping...");
-//                return;
-//            }
 
             bool tempBool;
             string posterUrl = nvc["poster"];
@@ -341,7 +396,7 @@ namespace HDTrailersNETDownloader
             //If download went ok, and we're using exclusions, add to list
             if (tempBool && config.UseExclusions)
             {
-                Exclusions.Add(title);
+                Exclusions.Add(newtitle);
                 log.VerboseWrite("Exclusion added");
             }
 
@@ -415,7 +470,7 @@ namespace HDTrailersNETDownloader
             }
         }
 
-        static string ReadDataFromLink(string link)
+        static public string ReadDataFromLink(string link)
         {
             try
             {
@@ -586,8 +641,8 @@ namespace HDTrailersNETDownloader
             {
                 fName = DateTime.Now.ToString("yyyy-MM-dd") + " " + fName;
             }
-            if (fName.Contains(".nfo")) return fName;
-                if (config.XBMCFilenames)
+//            if (fName.Contains(".nfo")) return fName;
+            if (config.XBMCFilenames)
             {
                 fName = fName.Insert(fName.Length-4, "-trailer");
             }
@@ -597,6 +652,7 @@ namespace HDTrailersNETDownloader
 
         static bool GetOrResumeTrailer(string downloadURL, string fName, string dirName, string qualPref, string posterUrl)
         {
+            string Filename;
             HttpWebRequest myWebRequest;
             HttpWebResponse myWebResponse;
             bool tempBool = false;
@@ -612,12 +668,20 @@ namespace HDTrailersNETDownloader
 
             if (File.Exists(dirName + pathsep + fName))
             {
-                FileInfo fi = new FileInfo(dirName + pathsep + fName);
+                Filename = dirName + pathsep + fName;
+                FileInfo fi = new FileInfo(Filename);
                 StartPointInt = Convert.ToInt32(fi.Length);
             }
-            else
+            else if (File.Exists(dirName + pathsep + fName + ".tmp"))
+            {
+                Filename = dirName + pathsep + fName + ".tmp";
+                FileInfo fi = new FileInfo(Filename);
+                StartPointInt = Convert.ToInt32(fi.Length);
+            }
+            else {
+                Filename = dirName + pathsep + fName + ".tmp";
                 StartPointInt = 0;
-
+            }
             myWebRequest = (HttpWebRequest)WebRequest.Create(downloadURL);
             if (userAgentString != null)
             {
@@ -664,7 +728,7 @@ namespace HDTrailersNETDownloader
                 // Create a new file stream where we will be saving the data (local drive)
                 if (StartPointInt == 0)
                 {
-                    strLocal = new FileStream(dirName + pathsep + fName, FileMode.Create, FileAccess.Write, FileShare.None);
+                    strLocal = new FileStream(Filename, FileMode.Create, FileAccess.Write, FileShare.None);
                 }
                 else
                 {
@@ -673,7 +737,7 @@ namespace HDTrailersNETDownloader
                     else
                         log.WriteLine(StartPointInt.ToString() + " bytes of " + Convert.ToInt32(fileSize).ToString() + " located on disk. Server will not resume!!");
 
-                    strLocal = new FileStream(dirName + pathsep + fName, FileMode.Append, FileAccess.Write, FileShare.None);
+                    strLocal = new FileStream(Filename, FileMode.Append, FileAccess.Write, FileShare.None);
                 }
 
                 // It will store the current number of bytes we retrieved from the server
@@ -697,7 +761,11 @@ namespace HDTrailersNETDownloader
                 strResponse.Close();
                 strLocal.Close();
                 myWebResponse.Close();
-
+                FileInfo fi = new FileInfo(Filename);
+                StartPointInt = Convert.ToInt32(fi.Length);
+                if(StartPointInt == fileSize) {
+                    File.Move(Filename, dirName + pathsep + fName);
+                }
                 // Increment NewTrailerCount(er)
                 NewTrailerCount = NewTrailerCount + 1;
                 tempBool = true;

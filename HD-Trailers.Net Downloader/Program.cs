@@ -60,23 +60,42 @@ namespace HDTrailersNETDownloader
 
                 //Delete folders/files if needed
                 DeleteEm();
-                trailerFreakRSS itemsMM = new trailerFreakRSS();
-                itemsMM.GetFeedItems(config.FeedAddress);
-                for (int i = 0; i < itemsMM.Count && i < 30; i++)
+
+                hdTrailersNet itemsHD = new hdTrailersNet();
+                if (itemsHD.IsUrlValid(config.FeedAddress) != System.String.Empty)
                 {
-                    log.WriteLine(itemsMM[i].name);
-                    log.WriteLine(" number of links:" + itemsMM[i].nvc.Count.ToString());
-                    for (int j = 0; j < itemsMM[i].nvc.Count; j++)
-                        log.WriteLine(" " + i.ToString() + ".item:" + itemsMM[i].nvc.GetKey(j).ToString() + " " + itemsMM[i].nvc.Get(j).ToString());
+                    itemsHD.GetFeedItems(config.FeedAddress);
+                    for (int i = 0; i < itemsHD.Count; i++)
+                    {
+                        ProcessFeedItem(itemsHD[i].name, itemsHD[i]);
+                    }
+                } 
+                hdTrailersNetWeb itemsHDW = new hdTrailersNetWeb();
+                if (itemsHDW.IsUrlValid(config.FeedAddress) != System.String.Empty)
+                {
+                    itemsHDW.GetFeedItems(config.FeedAddress);
+                    for (int i = 0; i < itemsHDW.Count; i++)
+                    {
+                        ProcessFeedItem(itemsHDW[i].name, itemsHDW[i]);
+                    }
                 }
-
-//                feedItems = GetFeedItems(config.FeedAddress);
-//                log.VerboseWrite("RSS feed items (" + feedItems.Count.ToString() + ") from "+ config.FeedAddress +" grabbed successfully");
-
-                for (int i = 0; i < itemsMM.Count; i++)
+                trailerFreakRSS itemsTF = new trailerFreakRSS();
+                if (itemsTF.IsUrlValid(config.FeedAddress) != System.String.Empty)
                 {
-                    ProcessFeedItem(itemsMM[i].name, itemsMM[i]);
-//                    ProcessFeedItem(feedItems[i].Title, feedItems[i].Link);
+                    itemsTF.GetFeedItems(config.FeedAddress);
+                    for (int i = 0; i < itemsTF.Count; i++)
+                    {
+                        ProcessFeedItem(itemsTF[i].name, itemsTF[i]);
+                    }
+                }
+                movieMazeDeRSS itemsMM = new movieMazeDeRSS();
+                if (itemsMM.IsUrlValid(config.FeedAddress) != System.String.Empty)
+                {
+                    itemsMM.GetFeedItems(config.FeedAddress);
+                    for (int i = 0; i < itemsMM.Count; i++)
+                    {
+                        ProcessFeedItem(itemsMM[i].name, itemsMM[i]);
+                    }
                 }
                 //Do housekeeping like serializing exclusions and sending email summary
                 log.VerboseWrite("");
@@ -184,8 +203,10 @@ namespace HDTrailersNETDownloader
                     {
                         if ((Directory.GetCreationTime(dirList[i]).AddDays(config.KeepFor)) < DateTime.Now)
                         {
-                            FileSystem.DeleteDirectory(dirList[i], Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs, Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
-//                            Directory.Delete(dirList[i], true);
+                            if(config.DeleteToRecycleBin)
+                                FileSystem.DeleteDirectory(dirList[i], Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs, Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
+                            else
+                                Directory.Delete(dirList[i], true);
                             if (config.VerboseLogging)
                                 log.WriteLine("Deleted directory: " + dirList[i]);
                         }
@@ -196,8 +217,10 @@ namespace HDTrailersNETDownloader
                     {
                         if ((File.GetCreationTime(fileList[i]).AddDays(config.KeepFor)) < DateTime.Now && !fileList[i].Contains("folder"))
                         {
-                            FileSystem.DeleteFile(fileList[i], Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs, Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
-//                            File.Delete(fileList[i]);
+                            if (config.DeleteToRecycleBin)
+                                FileSystem.DeleteFile(fileList[i], Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs, Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
+                            else
+                                File.Delete(fileList[i]);
                             if (config.VerboseLogging)
                                 log.WriteLine("Deleted file: " + fileList[i]);
                         }
@@ -359,10 +382,12 @@ namespace HDTrailersNETDownloader
                 string MovieName = reg.Replace(fname, "");
 //                String MovieName = "The Pruitt-Igoe Myth";
                 MovieName.Trim();
-                if(link.imdbId.Length > 0) {
-                    imdb.ImdbLookup(link.imdbId);
-                } else {
-                   imdb.ImdbLookup(MovieName);
+                if(link.imdbId != null) {
+                    if(link.imdbId.Length > 0) {
+                        imdb.ImdbLookup(link.imdbId);
+                    } else {
+                        imdb.ImdbLookup(MovieName);
+                    }
                 }
             }
             if(!(config.IncludeGenres.IndexOf("all", StringComparison.OrdinalIgnoreCase) >= 0))
@@ -687,107 +712,118 @@ namespace HDTrailersNETDownloader
             {
                 myWebRequest.UserAgent = userAgentString;
             }
+            try {
+                using (myWebResponse = (HttpWebResponse)myWebRequest.GetResponse()) {
+                    log.WriteLine("Stream successfuly opened");
+                    myWebResponse = (HttpWebResponse)myWebRequest.GetResponse();
 
-            myWebResponse = (HttpWebResponse)myWebRequest.GetResponse();
+                    // Ask the server for the file size and store it
+                    int fileSize = Convert.ToInt32(myWebResponse.ContentLength);
 
-            // Ask the server for the file size and store it
-            int fileSize = Convert.ToInt32(myWebResponse.ContentLength);
+                    myWebResponse.Close();
+                    myWebRequest.Abort();
 
-            myWebResponse.Close();
-            myWebRequest.Abort();
+                    if ((config.MinTrailerSize > 0) && (fileSize < config.MinTrailerSize))
+                    {
+                        log.WriteLine("Trailer size smaller then MinTrailerSize. Skipping ...");
+                        return false;
+                    }
 
-            if ((config.MinTrailerSize > 0) && (fileSize < config.MinTrailerSize))
-            {
-                log.WriteLine("Trailer size smaller then MinTrailerSize. Skipping ...");
+
+                    if (StartPointInt < fileSize)
+                    {
+                        Stream strResponse;
+                        FileStream strLocal;
+
+                        // Create a request to the file we are downloading
+                        myWebRequest = (HttpWebRequest)WebRequest.Create(downloadURL);
+                        myWebRequest.Credentials = CredentialCache.DefaultCredentials;
+                        if (userAgentString != null)
+                        {
+                            myWebRequest.UserAgent = userAgentString;
+                        }
+
+                        if (StartPointInt > 0)
+                            myWebRequest.AddRange(StartPointInt, fileSize);
+                
+                        // Retrieve the response from the server
+                        myWebResponse = (HttpWebResponse)myWebRequest.GetResponse();
+
+                        // Open the URL for download
+                        strResponse = myWebResponse.GetResponseStream();
+
+                        // Create a new file stream where we will be saving the data (local drive)
+                        if (StartPointInt == 0)
+                        {
+                            strLocal = new FileStream(Filename, FileMode.Create, FileAccess.Write, FileShare.None);
+                        }
+                        else
+                        {
+                            if (myWebResponse.StatusCode == HttpStatusCode.PartialContent)
+                                log.WriteLine(StartPointInt.ToString() + " bytes of " + Convert.ToInt32(fileSize).ToString() + " located on disk. Resuming...");
+                            else
+                                log.WriteLine(StartPointInt.ToString() + " bytes of " + Convert.ToInt32(fileSize).ToString() + " located on disk. Server will not resume!!");
+
+                            strLocal = new FileStream(Filename, FileMode.Append, FileAccess.Write, FileShare.None);
+                        }
+
+                        // It will store the current number of bytes we retrieved from the server
+                        int bytesSize = 0;
+
+                        // A buffer for storing and writing the data retrieved from the server
+                        byte[] downBuffer = new byte[65536];
+
+
+                        // Loop through the buffer until the buffer is empty
+                        while ((bytesSize = strResponse.Read(downBuffer, 0, downBuffer.Length)) > 0)
+                        {
+                            // Write the data from the buffer to the local hard drive
+                            strLocal.Write(downBuffer, 0, bytesSize);
+                            StartPointInt += bytesSize;
+                    
+                            double t = ((double)StartPointInt) / fileSize;
+                            log.ConsoleWrite(t.ToString("###.0%\r", CultureInfo.InvariantCulture));
+                        }
+                        // When the above code has ended, close the streams
+                        strResponse.Close();
+                        strLocal.Close();
+                        myWebResponse.Close();
+                        FileInfo fi = new FileInfo(Filename);
+                        StartPointInt = Convert.ToInt32(fi.Length);
+                        if(StartPointInt == fileSize) {
+                            File.Move(Filename, dirName + pathsep + fName);
+                        }
+                        // Increment NewTrailerCount(er)
+                        NewTrailerCount = NewTrailerCount + 1;
+                        tempBool = true;
+                    }
+                    else if (StartPointInt == Convert.ToInt32(fileSize))
+                    {
+                        tempBool = false;
+                        log.WriteLine("File exists and is same size. Skipping...");
+                    }
+                    else
+                    {
+                        tempBool = false;
+                        log.WriteLine("Something else is wrong.. size on disk is greater than size on web.");
+                    }
+
+                    //Assuming we downloaded the trailer OK and the config has been set to grab posters...
+                    if ( (tempBool) && (config.GrabPoster))
+                        GetPoster(posterUrl, dirName, fName);
+
+                    return tempBool;
+                }
+            }
+
+            catch (WebException e)
+            {            
+                Program.log.WriteLine("Exception in GetOrResumeTrailer");
+                Program.log.WriteLine(e.ToString());
                 return false;
             }
-
-
-            if (StartPointInt < fileSize)
-            {
-                Stream strResponse;
-                FileStream strLocal;
-
-                // Create a request to the file we are downloading
-                myWebRequest = (HttpWebRequest)WebRequest.Create(downloadURL);
-                myWebRequest.Credentials = CredentialCache.DefaultCredentials;
-                if (userAgentString != null)
-                {
-                    myWebRequest.UserAgent = userAgentString;
-                }
-
-                if (StartPointInt > 0)
-                    myWebRequest.AddRange(StartPointInt, fileSize);
-                
-                // Retrieve the response from the server
-                myWebResponse = (HttpWebResponse)myWebRequest.GetResponse();
-
-                // Open the URL for download
-                strResponse = myWebResponse.GetResponseStream();
-
-                // Create a new file stream where we will be saving the data (local drive)
-                if (StartPointInt == 0)
-                {
-                    strLocal = new FileStream(Filename, FileMode.Create, FileAccess.Write, FileShare.None);
-                }
-                else
-                {
-                    if (myWebResponse.StatusCode == HttpStatusCode.PartialContent)
-                        log.WriteLine(StartPointInt.ToString() + " bytes of " + Convert.ToInt32(fileSize).ToString() + " located on disk. Resuming...");
-                    else
-                        log.WriteLine(StartPointInt.ToString() + " bytes of " + Convert.ToInt32(fileSize).ToString() + " located on disk. Server will not resume!!");
-
-                    strLocal = new FileStream(Filename, FileMode.Append, FileAccess.Write, FileShare.None);
-                }
-
-                // It will store the current number of bytes we retrieved from the server
-                int bytesSize = 0;
-
-                // A buffer for storing and writing the data retrieved from the server
-                byte[] downBuffer = new byte[65536];
-
-
-                // Loop through the buffer until the buffer is empty
-                while ((bytesSize = strResponse.Read(downBuffer, 0, downBuffer.Length)) > 0)
-                {
-                    // Write the data from the buffer to the local hard drive
-                    strLocal.Write(downBuffer, 0, bytesSize);
-                    StartPointInt += bytesSize;
-                    
-                    double t = ((double)StartPointInt) / fileSize;
-                    log.ConsoleWrite(t.ToString("###.0%\r", CultureInfo.InvariantCulture));
-                }                // When the above code has ended, close the streams
-
-                strResponse.Close();
-                strLocal.Close();
-                myWebResponse.Close();
-                FileInfo fi = new FileInfo(Filename);
-                StartPointInt = Convert.ToInt32(fi.Length);
-                if(StartPointInt == fileSize) {
-                    File.Move(Filename, dirName + pathsep + fName);
-                }
-                // Increment NewTrailerCount(er)
-                NewTrailerCount = NewTrailerCount + 1;
-                tempBool = true;
-            }
-            else if (StartPointInt == Convert.ToInt32(fileSize))
-            {
-                tempBool = false;
-                log.WriteLine("File exists and is same size. Skipping...");
-            }
-            else
-            {
-                tempBool = false;
-                log.WriteLine("Something else is wrong.. size on disk is greater than size on web.");
-            }
-
-            //Assuming we downloaded the trailer OK and the config has been set to grab posters...
-            if ( (tempBool) && (config.GrabPoster))
-                GetPoster(posterUrl, dirName, fName);
-
-            return tempBool;
+            
         }
-
         /// <summary>
         /// based on the url look in the configuration if a useragent string is required
         /// </summary>

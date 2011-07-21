@@ -22,6 +22,7 @@ namespace HDTrailersNETDownloader
         public bool PauseWhenDone { get; private set; }
         public bool PhysicalLog { get; private set; }
         public int KeepFor { get; private set; }
+        public bool DeleteToRecycleBin { get; private set; }
         public bool GrabPoster { get; private set; }
         public bool XBMCFilenames { get; private set; }
         public string IfIMDBMissingMPAARatingUse { get; private set; }
@@ -143,6 +144,7 @@ namespace HDTrailersNETDownloader
             this.PhysicalLog = GetBooleanFromAppsettings(appSetting, "PhysicalLog", "true");
             this.PauseWhenDone = GetBooleanFromAppsettings(appSetting, "PauseWhenDone", "true");
             this.KeepFor = GetInt32FromAppsettings(appSetting, "KeepFor", "0");
+            this.DeleteToRecycleBin = GetBooleanFromAppsettings(appSetting, "DeleteToRecycleBin", "true");
             this.MinTrailerSize = GetInt32FromAppsettings(appSetting, "MinTrailerSize", "100000");
             this.UseExclusions = GetBooleanFromAppsettings(appSetting, "UseExclusions", "true");
             this.TrailersOnly = GetBooleanFromAppsettings(appSetting, "TrailersOnly", "true");
@@ -184,6 +186,7 @@ namespace HDTrailersNETDownloader
             sb.AppendFormat("{0}: {1}\n", "PhysicalLog", PhysicalLog.ToString());
             sb.AppendFormat("{0}: {1}\n", "PauseWhenDone", PauseWhenDone.ToString());
             sb.AppendFormat("{0}: {1}\n", "KeepFor", KeepFor.ToString());
+            sb.AppendFormat("{0}: {1}\n", "DeleteToRecycleBin", DeleteToRecycleBin.ToString());
             sb.AppendFormat("{0}: {1}\n", "UseExclusions", UseExclusions.ToString());
             sb.AppendFormat("{0}: {1}\n", "TrailersOnly", TrailersOnly.ToString());
             sb.AppendFormat("{0}: {1}\n", "TrailersIdenticaltoTheatricalTrailers", TrailersIdenticaltoTheatricalTrailers.ToString());

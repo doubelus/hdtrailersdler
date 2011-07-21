@@ -113,6 +113,7 @@
     <Compile Include="Class3.cs" />
     <Compile Include="Class4.cs" />
     <Compile Include="fetcher_GenericFetcher.cs" />
+    <Compile Include="fetcher_HDTrailerNetWeb.cs" />
     <Compile Include="fetcher_HDTrailersNet.cs" />
     <Compile Include="fetcher_MovieMazeDe.cs" />
     <Compile Include="fetcher_TrailerFreakRSS.cs" />

@@ -1,0 +1,12 @@
+<CustomTasks>
+<Task>
+<GUID>531E0175-87F4-4d6f-B464-E603BC641DAE</GUID>
+<Priority>Deferred</Priority>
+<PropertyCollection>
+<Property>
+<Name>Command</Name>
+<Value>ENTER THE PATH OF YOUR COMMAND HERE</Value>
+</Property>
+</PropertyCollection>
+</Task>
+</CustomTasks>

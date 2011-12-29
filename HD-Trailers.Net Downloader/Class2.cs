@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
 
-namespace HDTrailersNETDownloader
+namespace Nfo.Movie
 {
     [XmlRoot(
     ElementName = "movie",

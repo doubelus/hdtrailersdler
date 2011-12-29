@@ -53,6 +53,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestCertificateThumbprint>45B7E935AB58BBFB0FAC043E26BF2E23774B2B8F</ManifestCertificateThumbprint>
@@ -61,7 +62,7 @@
     <ManifestKeyFile>HD-Trailers.Net Downloader_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <GenerateManifests>true</GenerateManifests>
+    <GenerateManifests>false</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
     <SignManifests>false</SignManifests>
@@ -108,20 +109,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
     <Compile Include="Class2.cs" />
     <Compile Include="Class3.cs" />
     <Compile Include="Class4.cs" />
+    <Compile Include="IMDB_Scraper.cs" />
     <Compile Include="fetcher_GenericFetcher.cs" />
     <Compile Include="fetcher_HDTrailerNetWeb.cs" />
-    <Compile Include="fetcher_HDTrailersNet.cs" />
+    <Compile Include="fetcher_HDTrailersNetRSS.cs" />
+    <Compile Include="fetcher_HDTrailersNetRss2.cs" />
     <Compile Include="fetcher_MovieMazeDe.cs" />
     <Compile Include="fetcher_TrailerFreakRSS.cs" />
+    <Compile Include="NDesk.Options.cs" />
     <Compile Include="StringFunctions.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Logging.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="bin\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="trailer.ico" />

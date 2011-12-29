@@ -5,7 +5,7 @@ using System.Text;
 using System.Xml.Serialization;
 using System.IO;
 
-namespace HDTrailersNETDownloader
+namespace Serializer_IO
 {
     class Serializer
     {
@@ -25,8 +25,8 @@ namespace HDTrailersNETDownloader
             }
             catch (Exception e)
             {
-                Program.log.WriteLine("Unhandled exception in Serializer. Application will close ....");
-                Program.log.WriteLine("Exception: " + e.ToString());
+//                Program.log.WriteLine("Unhandled exception in Serializer. Application will close ....");
+//                Program.log.WriteLine("Exception: " + e.ToString());
             }
         }
 
@@ -42,8 +42,8 @@ namespace HDTrailersNETDownloader
             }
             catch (Exception e)
             {
-                Program.log.WriteLine("Unhandled exception in Serializer FromFile. Application will close ....");
-                Program.log.WriteLine("Exception: " + e.ToString());
+//                Program.log.WriteLine("Unhandled exception in Serializer FromFile. Application will close ....");
+//                Program.log.WriteLine("Exception: " + e.ToString());
                 return null;
             }
         }
@@ -59,8 +59,8 @@ namespace HDTrailersNETDownloader
             }
             catch (Exception e)
             {
-                Program.log.WriteLine("Unhandled exception in Serializer ToFile. Application will close ....");
-                Program.log.WriteLine("Exception: " + e.ToString());
+//                Program.log.WriteLine("Unhandled exception in Serializer ToFile. Application will close ....");
+//                Program.log.WriteLine("Exception: " + e.ToString());
                 return false;
             }
         }

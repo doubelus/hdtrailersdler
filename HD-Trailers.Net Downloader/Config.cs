@@ -40,6 +40,10 @@ namespace HDTrailersNETDownloader
         public bool EmailSummary { get; private set; }
         public string EmailAddress { get; private set; }
         public string SMTPServer { get; private set; }
+        public int SMTPPort { get; private set; }
+        public bool UseDefaultCredentials { get; private set; }
+        public string SMTPUsername { get; private set; }
+        public string SMTPPassword { get; private set; }
         public string EmailReturnAddress { get; private set; }
         public string EmailReturnDisplayName { get; private set; }
         public bool AddDates { get; private set; }
@@ -79,7 +83,7 @@ namespace HDTrailersNETDownloader
             return Convert.ToBoolean(ret, CultureInfo.InvariantCulture);
         }
 
-        // return a bool from a NameValue
+        // return a Int32 from a NameValue
         private Int32 GetInt32FromAppsettings(XElement coll, string name, string def)
         {
             string ret = GetStringFromAppsettings(coll, name, def);
@@ -157,6 +161,10 @@ namespace HDTrailersNETDownloader
             this.EmailSummary = GetBooleanFromAppsettings(appSetting, "EmailSummary", "false");
             this.EmailAddress = GetStringFromAppsettings(appSetting, "EmailAddress", "");
             this.SMTPServer = GetStringFromAppsettings(appSetting, "SMTPServer", "");
+            this.SMTPPort = GetInt32FromAppsettings(appSetting, "SMTPPort", "25");
+            this.UseDefaultCredentials = GetBooleanFromAppsettings(appSetting, "UseDefaultCredentials", "true");
+            this.SMTPUsername = GetStringFromAppsettings(appSetting, "SMTPUsername", "");
+            this.SMTPPassword = GetStringFromAppsettings(appSetting, "SMTPPassword", "");
             this.EmailReturnAddress = GetStringFromAppsettings(appSetting, "EmailReturnAddress", "");
             this.EmailReturnDisplayName = GetStringFromAppsettings(appSetting, "EmailReturnDisplayName", "");
             this.AddDates = GetBooleanFromAppsettings(appSetting, "AddDates", "true");
@@ -216,6 +224,13 @@ namespace HDTrailersNETDownloader
             sb.AppendFormat("{0}: {1}\n", "EmailAddress", EmailAddress.ToString());
             sb.AppendFormat("{0}: {1}\n", "EmailSummary", EmailSummary.ToString());
             sb.AppendFormat("{0}: {1}\n", "SMTPServer", SMTPServer.ToString());
+            sb.AppendFormat("{0}: {1}\n", "SMTPPort", SMTPPort.ToString());
+            sb.AppendFormat("{0}: {1}\n", "UseDefaultCredentials", UseDefaultCredentials.ToString());
+            if (!UseDefaultCredentials)
+            {
+                sb.AppendFormat("{0}: {1}\n", "SMTPUsername", "*********");
+                sb.AppendFormat("{0}: {1}\n", "SMTPPassword", "*********");
+            }
             sb.AppendFormat("{0}: {1}\n", "EmailReturnAddress", EmailReturnAddress.ToString());
             sb.AppendFormat("{0}: {1}\n", "EmailReturnDisplayName", EmailReturnDisplayName.ToString());
 

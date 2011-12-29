@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Nfo.Movie;
+using Serializer_IO;
 
-namespace HDTrailersNETDownloader
+namespace Nfo.File
 {
     class NfoFile
     {

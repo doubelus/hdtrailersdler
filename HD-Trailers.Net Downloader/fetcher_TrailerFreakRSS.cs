@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Collections;
 using System.Text;
+using IMDb_Scraper;
 
 namespace HDTrailersNETDownloader
 {

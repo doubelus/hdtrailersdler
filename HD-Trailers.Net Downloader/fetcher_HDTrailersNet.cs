@@ -13,6 +13,7 @@ namespace HDTrailersNETDownloader
         public hdTrailersNet()
         {
             validurls = new List<string>();
+
             validurls.Add("http://www.hd-trailers.net/blog/feed/");
         }
         ~hdTrailersNet()

@@ -1,0 +1,48 @@
+C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache
+C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
+C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
+C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
+C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
+C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.config
+C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\bin\Release\RssReader.dll
+C:\Users\Brian\Documents\Visual Studio 2008\Projects\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader Exclusions.xml
+C:\work\HDtrailer\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
+C:\work\HDtrailer\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
+C:\work\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.config
+C:\work\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
+C:\work\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
+C:\work\HDtrailer\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache
+W:\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.config
+W:\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
+W:\HDtrailer\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
+W:\HDtrailer\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache
+W:\HDtrailer\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
+W:\HDtrailer\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
+C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
+C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
+C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.config
+C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
+C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
+C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache
+C:\Users\Brian\Documents\Visual Studio 2010\Projects\HD-Trailers.NET Downloader\HD-Trailers.Net Downloader\bin\Release\PreEmptive.Attributes.dll
+G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
+G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
+G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache
+G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.config
+G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
+G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
+G:\My Projects\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\PreEmptive.Attributes.dll
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\PreEmptive.Attributes.dll
+G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.config
+E:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache
+E:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
+E:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.config
+E:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
+E:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
+E:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\PreEmptive.Attributes.dll
+E:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb

@@ -1,1 +1,0 @@
-This is the HD-Trailers.Net Downloader application

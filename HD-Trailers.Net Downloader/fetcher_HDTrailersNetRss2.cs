@@ -24,6 +24,7 @@ namespace HDTrailersNETDownloader
         {
             try
             {
+                string trailerString;
                 string data = Program.ReadDataFromLink(mi.url);
                 string trailertype = StringFunctions.subStrBetween(mi.name, "(", ")" );
                 string[] tempStringArray = StringFunctions.splitBetween(data, "<tr style=\"\" ", "</tr>");
@@ -31,7 +32,20 @@ namespace HDTrailersNETDownloader
                 {
                     if (tempStringArray[i].Contains("standardTrailerName"))
                     {
-                        string name = StringFunctions.subStrBetween(tempStringArray[i], "<span class=\"standardTrailerName\" itemprop=\"name\">", "</span>");
+                        trailerString = "standardTrailerName";
+                    } 
+                    else if (tempStringArray[i].Contains("restrictedTrailerName"))
+                    {
+                        trailerString = "restrictedTrailerName";
+                    }
+                    else
+                    {
+                        trailerString = "";
+                    }
+
+                    if(trailerString.Length > 0) 
+                    {
+                        string name = StringFunctions.subStrBetween(tempStringArray[i], "<span class=\"" + trailerString + "\" itemprop=\"name\">", "</span>");
                         if (trailertype == name)
                         {
                             mi.name = mi.name.Substring(0, mi.name.IndexOf("("));

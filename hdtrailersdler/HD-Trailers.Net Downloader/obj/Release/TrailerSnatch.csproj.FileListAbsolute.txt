@@ -1,6 +1,0 @@
-C:\Users\Brian\AppData\Local\Temporary Projects\TrailerSnatch\obj\Release\ResolveAssemblyReference.cache
-C:\Users\Brian\AppData\Local\Temporary Projects\TrailerSnatch\bin\Release\TrailerSnatch.exe
-C:\Users\Brian\AppData\Local\Temporary Projects\TrailerSnatch\bin\Release\TrailerSnatch.pdb
-C:\Users\Brian\AppData\Local\Temporary Projects\TrailerSnatch\bin\Release\RssReader.dll
-C:\Users\Brian\AppData\Local\Temporary Projects\TrailerSnatch\obj\Release\TrailerSnatch.exe
-C:\Users\Brian\AppData\Local\Temporary Projects\TrailerSnatch\obj\Release\TrailerSnatch.pdb

@@ -110,8 +110,9 @@ namespace IMDb_Scraper
             {
                 string html = getUrlData(imdburl);
                 parseIMDbPage(html, GetExtraInfo);
+                return true;
             }
-            return true;
+            return false;
         }
 
         //Parse IMDb page data
@@ -245,13 +246,32 @@ namespace IMDb_Scraper
         // isGenre
         public bool isGenre(string gen)
         {
-            string[] genre1 = gen.Split('/');
-            foreach (string genre2 in genre1)
+            if (Genres != null)
             {
-                genre2.Trim();
-                foreach (string genre3 in Genres)
-                    if (genre2.IndexOf(genre3, StringComparison.OrdinalIgnoreCase) >= 0)
-                        return true;
+                string[] genre1 = gen.Split('/');
+                foreach (string genre2 in genre1)
+                {
+                    genre2.Trim();
+                    foreach (string genre3 in Genres)
+                        if (genre2.IndexOf(genre3, StringComparison.OrdinalIgnoreCase) >= 0)
+                            return true;
+                }
+            }
+            return false;
+        }
+        // isLanguage
+        public bool isLanguage(string lang)
+        {
+            if (Languages != null)
+            {
+                string[] lang1 = lang.Split('/');
+                foreach (string lang2 in lang1)
+                {
+                lang2.Trim();
+                    foreach (string lang3 in Languages)
+                        if (lang2.IndexOf(lang3, StringComparison.OrdinalIgnoreCase) >= 0)
+                            return true;
+                }
             }
             return false;
         }

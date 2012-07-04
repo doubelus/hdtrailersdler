@@ -33,7 +33,9 @@ namespace HDTrailersNETDownloader
         public bool TrailersIdenticaltoTheatricalTrailers { get; private set; }
         public bool SkipTheatricalTrailers { get; private set; }
         public bool SkipTeaserTrailers { get; private set; }
+        public bool SkipRedBandTrailers { get; private set; }
         public bool ConsiderTheatricalandNumberedTrailersasIdentical { get; private set; }
+        public string IncludeLanguages { get; private set; }
         public string IncludeGenres { get; private set; }
         public string ExcludeGenres { get; private set; }
         public int MinTrailerSize { get; private set; }
@@ -136,8 +138,20 @@ namespace HDTrailersNETDownloader
 
              this.QualityPreference = GetStringArrayFromAppsettings(appSetting, "QualityPreference", "720p,480p");
             this.SitesToSkip = GetStringArrayFromAppsettings(appSetting, "SitesToSkip", "");
-            this.TrailerDownloadFolder = GetStringFromAppsettings(appSetting, "TrailerDownloadFolder", "c:\\Trailers").TrimEnd('\\');
-            this.MetadataDownloadFolder = GetStringFromAppsettings(appSetting, "MetadataDownloadFolder", "c:\\Trailers").TrimEnd('\\');
+            this.TrailerDownloadFolder = GetStringFromAppsettings(appSetting, "TrailerDownloadFolder", "").TrimEnd('\\');
+            if (this.TrailerDownloadFolder.Length == 0)
+            {
+                this.TrailerDownloadFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "HD-Trailers.Net Downloader");
+                if (!Directory.Exists(this.TrailerDownloadFolder))
+                {
+                    Directory.CreateDirectory(this.TrailerDownloadFolder);
+                }
+            }
+            this.MetadataDownloadFolder = GetStringFromAppsettings(appSetting, "MetadataDownloadFolder", "").TrimEnd('\\');
+            if (this.MetadataDownloadFolder.Length == 0)
+            {
+                this.MetadataDownloadFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
+            }
             this.GrabPoster = GetBooleanFromAppsettings(appSetting, "GrabPoster", "true");
             this.XBMCFilenames = GetBooleanFromAppsettings(appSetting, "XBMCFileNames", "false");
             this.CreateXBMCNfoFile = GetBooleanFromAppsettings(appSetting, "CreateXBMCNfoFile", "true");
@@ -155,9 +169,11 @@ namespace HDTrailersNETDownloader
             this.TrailersIdenticaltoTheatricalTrailers = GetBooleanFromAppsettings(appSetting, "TrailersIdenticaltoTheatricalTrailers", "False");
             this.SkipTheatricalTrailers = GetBooleanFromAppsettings(appSetting, "SkipTheatricalTrailers", "False");
             this.SkipTeaserTrailers = GetBooleanFromAppsettings(appSetting, "SkipTeaserTrailers", "False");
+            this.SkipRedBandTrailers = GetBooleanFromAppsettings(appSetting, "SkipRedBandTrailers", "False");
             this.ConsiderTheatricalandNumberedTrailersasIdentical = GetBooleanFromAppsettings(appSetting, "ConsiderTheatricalandNumberedTrailersasIdentical", "False");
-            this.IncludeGenres = GetStringFromAppsettings(appSetting, "DownloadSpecifiedGenresOnly", "all");
-            this.ExcludeGenres = GetStringFromAppsettings(appSetting, "DownloadSpecifiedGenresOnly", "none");
+            this.IncludeGenres = GetStringFromAppsettings(appSetting, "IncludeGenres", "all");
+            this.ExcludeGenres = GetStringFromAppsettings(appSetting, "ExcludeGenres", "none");
+            this.IncludeLanguages = GetStringFromAppsettings(appSetting, "IncludeLanguages", "all");
             this.EmailSummary = GetBooleanFromAppsettings(appSetting, "EmailSummary", "false");
             this.EmailAddress = GetStringFromAppsettings(appSetting, "EmailAddress", "");
             this.SMTPServer = GetStringFromAppsettings(appSetting, "SMTPServer", "");
@@ -170,7 +186,7 @@ namespace HDTrailersNETDownloader
             this.AddDates = GetBooleanFromAppsettings(appSetting, "AddDates", "true");
             this.UserAgentId = GetStringArrayFromAppsettings(appSetting, "UserAgentIds", "");
             this.UserAgentString = GetStringArrayFromAppsettings(appSetting, "UserAgentStrings", "");
-            this.FeedAddress = GetStringFromAppsettings(appSetting, "FeedAddress", @"http://www.hd-trailers.net/blog/feed/");
+            this.FeedAddress = GetStringFromAppsettings(appSetting, "FeedAddress", @"http://feeds.hd-trailers.net/hd-trailers");
             this.RunEXE = GetBooleanFromAppsettings(appSetting, "RunEXE", "false");
             this.RunOnlyWhenNewTrailers = GetBooleanFromAppsettings(appSetting, "RunOnlyWhenNewTrailers", "false");
             this.Executable = GetStringFromAppsettings(appSetting, "Executable", "");
@@ -201,6 +217,9 @@ namespace HDTrailersNETDownloader
             sb.AppendFormat("{0}: {1}\n", "SkipTheatricalTrailers", SkipTheatricalTrailers.ToString());
             sb.AppendFormat("{0}: {1}\n", "SkipTeaserTrailers", SkipTeaserTrailers.ToString());
             sb.AppendFormat("{0}: {1}\n", "ConsiderTheatricalandNumberedTrailersasIdentical", ConsiderTheatricalandNumberedTrailersasIdentical.ToString());
+            sb.AppendFormat("{0}: {1}\n", "DownloadSpecifiedGenresOnly", IncludeGenres.ToString());
+            sb.AppendFormat("{0}: {1}\n", "DownloadSpecifiedGenresOnly", ExcludeGenres.ToString());
+            sb.AppendFormat("{0}: {1}\n", "DownloadSpecifiedLanguagesOnly", IncludeLanguages.ToString());
             sb.AppendFormat("{0}: {1}\n", "MinTrailerSize", MinTrailerSize.ToString());
             sb.AppendFormat("{0}: {1}\n", "AddDates", AddDates.ToString());
             if ((UserAgentId == null) || (UserAgentId.Length == 0))
@@ -221,6 +240,7 @@ namespace HDTrailersNETDownloader
                 for (i = 0; i < UserAgentString.Length; i++)
                     sb.AppendFormat("UserAgentString({0}): {1}\n", i+1, UserAgentString[i]);
             }
+            sb.AppendFormat("{0}: {1}\n", "FeedAddress", FeedAddress.ToString());
             sb.AppendFormat("{0}: {1}\n", "EmailAddress", EmailAddress.ToString());
             sb.AppendFormat("{0}: {1}\n", "EmailSummary", EmailSummary.ToString());
             sb.AppendFormat("{0}: {1}\n", "SMTPServer", SMTPServer.ToString());

@@ -1,7 +1,0 @@
-G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.config
-G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
-G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
-G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\PreEmptive.Attributes.dll
-G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache
-G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
-G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb

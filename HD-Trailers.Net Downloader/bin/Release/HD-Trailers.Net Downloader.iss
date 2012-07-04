@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "HD-Trailers.NET Downloader"
-#define MyAppVersion "1.5"
+#define MyAppVersion "2.0"
 #define MyAppPublisher "HD-Trailers.NET Downloader CodePlex Project"
 #define MyAppURL "http://hdtrailersdler.codeplex.com/"
 #define MyAppExeName "HD-Trailers.NET Downloader.exe"
@@ -22,9 +22,9 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
-OutputDir=G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release
+OutputDir=.
 OutputBaseFilename=setup
-SetupIconFile=G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\trailer.ico
+SetupIconFile=trailer.ico
 Compression=lzma
 SolidCompression=yes
 
@@ -36,17 +36,18 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
-Source: "G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe"; DestDir: {app}; Flags: ignoreversion 
-Source: "G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\PreEmptive.Attributes.dll"; DestDir: {app};  Flags: ignoreversion
-Source: "G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\ReadMe.txt"; DestDir: {app}; Flags: ignoreversion 
-Source: "G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\RssReader.dll"; DestDir: {app};  Flags: ignoreversion
-Source: "G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\SimpleConfigEditor.dll"; DestDir: {app};  Flags: ignoreversion
-Source: "G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.config"; DestDir: {localappdata}\HD-Trailers.Net Downloader;  Flags: confirmoverwrite
+Source: "HD-Trailers.Net Downloader.exe"; DestDir: {app}; Flags: ignoreversion 
+Source: "PreEmptive.Attributes.dll"; DestDir: {app};  Flags: ignoreversion
+Source: "ReadMe.txt"; DestDir: {app}; Flags: ignoreversion 
+Source: "RssReader.dll"; DestDir: {app};  Flags: ignoreversion
+Source: "SimpleConfigEditor.dll"; DestDir: {app};  Flags: ignoreversion
+Source: "HD-Trailers.Net Downloader.config"; DestDir: {localappdata}\HD-Trailers.Net Downloader;  Flags: confirmoverwrite
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{group}\{#MyAppName} Config File"; Filename: "{win}\notepad.exe"; Parameters: "{localappdata}\HD-Trailers.Net Downloader\HD-Trailers.Net Downloader.config"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, "&", "&&")}}"; Flags: nowait postinstall skipifsilent

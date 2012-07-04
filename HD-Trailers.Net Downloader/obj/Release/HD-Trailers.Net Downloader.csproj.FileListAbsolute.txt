@@ -46,3 +46,10 @@ G:\test5\HD-Trailers.Net Downloader\bin\Release\PreEmptive.Attributes.dll
 G:\test5\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache
 G:\test5\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
 G:\test5\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
+G:\test6\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.config
+G:\test6\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
+G:\test6\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
+G:\test6\HD-Trailers.Net Downloader\bin\Release\PreEmptive.Attributes.dll
+G:\test6\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache
+G:\test6\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
+G:\test6\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb

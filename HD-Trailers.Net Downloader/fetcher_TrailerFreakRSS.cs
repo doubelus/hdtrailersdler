@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Collections;
 using System.Text;
+using System.Web.UI;
 using IMDb_Scraper;
 
 namespace HDTrailersNETDownloader
@@ -51,7 +52,7 @@ namespace HDTrailersNETDownloader
                             string[] links = StringFunctions.splitBetween(trailer, "<a", "</a>");
                             foreach (String linkStr in links)
                             {
-                                string link = StringFunctions.subStrBetween(linkStr, "href=\"", "\"");
+                                string link = System.Web.VirtualPathUtility.ToAbsolute("~" + StringFunctions.subStrBetween(linkStr, "href=\"", "\""));
                                 string size = StringFunctions.subStrBetween(linkStr, ">");
                                 size = size.ToLowerInvariant();
                                 mi.nvc.Add(size, link);

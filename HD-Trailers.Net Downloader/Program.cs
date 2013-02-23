@@ -38,7 +38,7 @@ namespace HDTrailersNETDownloader
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
 //        static List<string> extra; 
-        static string Version = "HD-Trailers.Net Downloader v2.0.11";
+        static string Version = "HD-Trailers.Net Downloader v2.0.13";
         static int NewTrailerCount = 0;
         [PreEmptive.Attributes.Setup(CustomEndpoint = "so-s.info/PreEmptive.Web.Services.Messaging/MessagingServiceV2.asmx")]
         [PreEmptive.Attributes.Teardown()]
@@ -434,7 +434,7 @@ namespace HDTrailersNETDownloader
                 Regex reg = new Regex("\\(([^)]*)\\)");
                 string MovieName = reg.Replace(fname, "");
                 //                String MovieName = "The Pruitt-Igoe Myth";
-                MovieName.Trim();
+                MovieName = MovieName.Trim();
                 log.WriteLine("Looking up MovieName on IMDB");
                 if ((link.imdbId != null) && (link.imdbId.Length > 0))
                 {
@@ -532,15 +532,11 @@ namespace HDTrailersNETDownloader
                     else
                     {
 
-                        if (imdb.MpaaRating.Length != 0)
+                        if (imdb.MpaaRating.Length == 0)
                         {
                             if (config.IfIMDBMissingMPAARatingUse.Length != 0)
                             {
                                 NFOTrailer.Mpaa = config.IfIMDBMissingMPAARatingUse;
-                            }
-                            else
-                            {
-                                NFOTrailer.Mpaa = "";
                             }
                         }
                         else
@@ -588,7 +584,6 @@ namespace HDTrailersNETDownloader
                 Stream dataStream = response.GetResponseStream();
                 StreamReader read = new StreamReader(dataStream);
                 String data = read.ReadToEnd();
-
                 read.Close();
                 dataStream.Close();
                 response.Close();
@@ -710,6 +705,10 @@ namespace HDTrailersNETDownloader
             if (config.XBMCFilenames)
             {
                 fName = fName.Insert(fName.Length - 4, "-trailer");
+            }
+            if (config.PlexFilenames)
+            {
+//                fName = fName.Insert(fName.Length - 4, "-trailer");
             }
             string nfofilename = dirName + pathsep + fName;
             return Path.ChangeExtension(nfofilename, ext);

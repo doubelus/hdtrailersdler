@@ -25,6 +25,7 @@ namespace HDTrailersNETDownloader
         public bool DeleteToRecycleBin { get; private set; }
         public bool GrabPoster { get; private set; }
         public bool XBMCFilenames { get; private set; }
+        public bool PlexFilenames { get; private set; }
         public string IfIMDBMissingMPAARatingUse { get; private set; }
         public bool AppendTrailerQuality { get; private set; }
         public bool CreateXBMCNfoFile { get; private set; }
@@ -154,6 +155,7 @@ namespace HDTrailersNETDownloader
             }
             this.GrabPoster = GetBooleanFromAppsettings(appSetting, "GrabPoster", "true");
             this.XBMCFilenames = GetBooleanFromAppsettings(appSetting, "XBMCFileNames", "false");
+            this.PlexFilenames = GetBooleanFromAppsettings(appSetting, "PlexFileNames", "false");
             this.CreateXBMCNfoFile = GetBooleanFromAppsettings(appSetting, "CreateXBMCNfoFile", "true");
             this.IfIMDBMissingMPAARatingUse = GetStringFromAppsettings(appSetting, "IfIMDBMissingMPAARatingUse", "");
             this.AppendTrailerQuality = GetBooleanFromAppsettings(appSetting, "AppendTrailerQuality", "true");

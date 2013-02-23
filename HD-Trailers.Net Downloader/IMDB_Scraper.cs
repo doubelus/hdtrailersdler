@@ -13,7 +13,7 @@ using System.Text.RegularExpressions;
  * Website: http://www.AbhinayRathore.com
  * Blog: http://web3o.blogspot.com
  * More Info: http://web3o.blogspot.com/2010/11/aspnetc-imdb-scraping-api.html
- * Last Updated: Sept 24, 2011
+ * Last Updated: Jan 29, 2013
  *******************************************************************************/
 
 namespace IMDb_Scraper
@@ -26,6 +26,7 @@ namespace IMDb_Scraper
         public string OriginalTitle { get; set; }
         public string Year { get; set; }
         public string Rating { get; set; }
+        public string Metascore { get; set; }
         public ArrayList Genres { get; set; }
         public ArrayList Directors { get; set; }
         public ArrayList Writers { get; set; }
@@ -50,6 +51,7 @@ namespace IMDb_Scraper
         public ArrayList Countries { get; set; }
         public ArrayList ReleaseDates { get; set; }
         public ArrayList MediaImages { get; set; }
+        public ArrayList RecommendedTitles { get; set; }
         public string ImdbURL { get; set; }
 
         //Search Engine URLs
@@ -79,10 +81,14 @@ namespace IMDb_Scraper
             DateTime thisyear = DateTime.Now;
             string thisyearstr = thisyear.Year.ToString();
             DateTime lastyear = DateTime.Now.AddYears(-1);
-            string lastyearstr = thisyear.Year.ToString();
+            string lastyearstr = lastyear.Year.ToString();
+//            string url = GoogleSearch + MovieName; //default to Google search
+//            if (searchEngine.ToLower().Equals("bing")) url = BingSearch + MovieName;
+//            if (searchEngine.ToLower().Equals("ask")) url = AskSearch + MovieName;
 
-            string url = GoogleSearch + System.Uri.EscapeUriString(MovieName) + System.Uri.EscapeUriString("(" + thisyearstr + " OR " + lastyearstr + ")");  //default to Google search
-            if (searchEngine.ToLower().Equals("bing")) url = BingSearch + System.Uri.EscapeUriString(MovieName) + System.Uri.EscapeUriString("(" + thisyearstr + " OR " + lastyearstr + ")"); 
+            string url = GoogleSearch + System.Uri.EscapeUriString(MovieName) + System.Uri.EscapeUriString(" and (" + thisyearstr + " or " + lastyearstr + ")");  //default to Google search
+           url = GoogleSearch + MovieName + " (" + thisyearstr + " or " + lastyearstr + ")";
+            if (searchEngine.ToLower().Equals("bing")) url = BingSearch + System.Uri.EscapeUriString(MovieName) + System.Uri.EscapeUriString("(" + thisyearstr + " OR " + lastyearstr + ")");
             if (searchEngine.ToLower().Equals("ask")) url = AskSearch + MovieName;
             string html = getUrlData(url);
             ArrayList imdbUrls = matchAll(@"<a href=""(http://www.imdb.com/title/tt\d{7}/)"".*?>.*?</a>", html);
@@ -118,44 +124,51 @@ namespace IMDb_Scraper
         //Parse IMDb page data
         private void parseIMDbPage(string html, bool GetExtraInfo)
         {
+
+            int istart, iend;
+            string substr1;
+
             Id = match(@"<link rel=""canonical"" href=""http://www.imdb.com/title/(tt\d{7})/"" />", html);
             if (!string.IsNullOrEmpty(Id))
             {
                 status = true;
                 Title = match(@"<title>(IMDb \- )*(.*?) \(.*?</title>", html, 2);
                 OriginalTitle = match(@"title-extra"">(.*?)<", html);
-                Year = match(@"<title>.*?\(.*?(\d{4}).*?\).*?</title>", html);
+                istart = html.IndexOf("<title>");
+                iend = html.IndexOf("</title>")+ 8;
+                substr1 = html.Substring(istart, iend-istart);
+                Year = match(@"<title>.*?\(.*?(\d{4}).*?\).*?</title>", substr1);
                 Rating = match(@"ratingValue"">(\d.\d)<", html);
+                Metascore = match(@"(\d*)/100", html);
                 Genres = new ArrayList();
                 Genres = matchAll(@"<a.*?>(.*?)</a>", match(@"Genres:</h4>(.*?)</div>", html));
                 Directors = new ArrayList();
                 Directors = matchAll(@"<a.*?>(.*?)</a>", match(@"Directors?:[\n\r\s]*</h4>(.*?)(</div>|>.?and )", html));
                 Writers = matchAll(@"<a.*?>(.*?)</a>", match(@"Writers?:[\n\r\s]*</h4>(.*?)(</div>|>.?and )", html));
-                Stars = matchAll(@"<a.*?>(.*?)</a>", match(@"Stars?:(.*?)</div>", html));
-                Cast = matchAll(@"class=""name"">[\n\r\s]*<a.*?>(.*?)</a>", html);
-                Plot = match(@"<p itemprop=""description"">(.*?)</p>", html);
+                Stars = matchAll(@"<a.*?>(.*?)</a>", match(@"Stars?:(.*?)(</div>|<a href=""fullcredits)", html));
+                Cast = matchAll(@"itemprop='name'>(.*?)</a>", html);
+                Plot = match(@"<p itemprop=""description"">(.*?)(<a|</p>)", html);
                 ReleaseDate = match(@"Release Date:</h4>.*?(\d{1,2} (January|February|March|April|May|June|July|August|September|October|November|December) (19|20)\d{2}).*(\(|<span)", html);
                 Runtime = match(@"Runtime:</h4>[\s]*.*?(\d{1,4}) min[\s]*.*?\<\/div\>", html);
-                if (String.IsNullOrEmpty(Runtime)) Runtime = match(@"infobar.*?([0-9]+) min.*?</div>", html);
+                if (String.IsNullOrEmpty(Runtime)) Runtime = match(@"<time itemprop=""duration"".*?>.*?(\d+) min.*?</time>", html);
                 Top250 = match(@"Top 250 #(\d{1,3})<", html);
-                Oscars = match(@"Won (\d{1,2}) Oscars\.", html);
+                Oscars = match(@"<b>Won (\d{1,2}) Oscars?\.</b>", html);
                 Awards = match(@"(\d{1,4}) wins", html);
                 Nominations = match(@"(\d{1,4}) nominations", html);
-                Storyline = match(@"Storyline</h2>[\s]*<p>(.*?)[\s]*(<em|</p>)", html);
+                Storyline = match(@"Storyline</h2>.*?<p>(.*?)[\s]*(<em|</p>)", html);
                 Tagline = match(@"Taglines?:</h4>(.*?)(<span|</div)", html);
-                MpaaRating = match(@"infobar"">.*?<img.*?alt=""(.*?)"" src="".*?certificates.*?"".*?>", html);
-                MpaaRating = MpaaRating.Replace("_", "-");
+                MpaaRating = match(@"<div class=""infobar"">[\n\r\s]*?<span title=""Ratings certificate for .*?"".*?class=""us_(.*?) ", html).ToUpper();
                 Votes = match(@"ratingCount"">(\d+,?\d*)</span>", html);
                 Languages = new ArrayList();
                 Languages = matchAll(@"<a.*?>(.*?)</a>", match(@"Language.?:(.*?)(</div>|>.?and )", html));
                 Countries = new ArrayList();
                 Countries = matchAll(@"<a.*?>(.*?)</a>", match(@"Country:(.*?)(</div>|>.?and )", html));
-                Poster = match(@"img_primary"">[\n\r\s]*?<a.*?><img src=""(.*?)"".*?</td>", html);
-                if (!string.IsNullOrEmpty(Poster) && Poster.IndexOf("nopicture") < 0)
+                Poster = match(@"<div class=""image"">.*?<img.*?src=""(.*?)"".*?</div>", html);
+                if (!string.IsNullOrEmpty(Poster) && Poster.IndexOf("media-imdb.com") > 0)
                 {
-                    PosterSmall = Regex.Replace(Poster, @"_V1\..*?.jpg", "_V1._SY150.jpg");
-                    PosterLarge = Regex.Replace(Poster, @"_V1\..*?.jpg", "_V1._SY500.jpg");
-                    PosterFull = Regex.Replace(Poster, @"_V1\..*?.jpg", "_V1._SY0.jpg");
+                    PosterSmall = Regex.Replace(Poster, @"_V1_.*?.jpg", "_V1._SY150.jpg");
+                    PosterLarge = Regex.Replace(Poster, @"_V1_.*?.jpg", "_V1._SY500.jpg");
+                    PosterFull = Regex.Replace(Poster, @"_V1_.*?.jpg", "_V1._SY0.jpg");
                 }
                 else
                 {
@@ -169,6 +182,7 @@ namespace IMDb_Scraper
                 {
                     ReleaseDates = getReleaseDates();
                     MediaImages = getMediaImages();
+                    RecommendedTitles = getRecommendedTitles();
                 }
             }
 
@@ -206,6 +220,20 @@ namespace IMDb_Scraper
             return list;
         }
 
+        //Get Recommended Titles
+        private ArrayList getRecommendedTitles()
+        {
+            ArrayList list = new ArrayList();
+            string recUrl = "http://www.imdb.com/widget/recommendations/_ajax/get_more_recs?specs=p13nsims%3A" + Id;
+            string json = getUrlData(recUrl);
+            list = matchAll(@"title=\\""(.*?)\\""", json);
+            HashSet<String> set = new HashSet<string>();
+            foreach(String rec in list) set.Add(rec);
+            return new ArrayList(set.ToList());
+        }
+
+        /*******************************[ Helper Methods ]********************************/
+
         //Match single instance
         private string match(string regex, string html, int i = 1)
         {
@@ -231,11 +259,11 @@ namespace IMDb_Scraper
         private string getUrlData(string url)
         {
             WebClient client = new WebClient();
- //           Random r = new Random();
+            Random r = new Random();
             //Random IP Address
- //           client.Headers["X-Forwarded-For"] = r.Next(0, 255) + "." + r.Next(0, 255) + "." + r.Next(0, 255) + "." + r.Next(0, 255);
+            client.Headers["X-Forwarded-For"] = r.Next(0, 255) + "." + r.Next(0, 255) + "." + r.Next(0, 255) + "." + r.Next(0, 255);
             //Random User-Agent
-//            client.Headers["User-Agent"] = "Mozilla/" + r.Next(3, 5) + ".0 (Windows NT " + r.Next(3, 5) + "." + r.Next(0, 2) + "; rv:2.0.1) Gecko/20100101 Firefox/" + r.Next(3, 5) + "." + r.Next(0, 5) + "." + r.Next(0, 5);
+            client.Headers["User-Agent"] = "Mozilla/" + r.Next(3, 5) + ".0 (Windows NT " + r.Next(3, 5) + "." + r.Next(0, 2) + "; rv:2.0.1) Gecko/20100101 Firefox/" + r.Next(3, 5) + "." + r.Next(0, 5) + "." + r.Next(0, 5);
             Stream datastream = client.OpenRead(url);
             StreamReader reader = new StreamReader(datastream);
             StringBuilder sb = new StringBuilder();
@@ -267,7 +295,7 @@ namespace IMDb_Scraper
                 string[] lang1 = lang.Split('/');
                 foreach (string lang2 in lang1)
                 {
-                lang2.Trim();
+                    lang2.Trim();
                     foreach (string lang3 in Languages)
                         if (lang2.IndexOf(lang3, StringComparison.OrdinalIgnoreCase) >= 0)
                             return true;

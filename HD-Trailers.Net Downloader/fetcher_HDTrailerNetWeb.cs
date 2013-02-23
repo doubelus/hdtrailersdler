@@ -19,6 +19,33 @@ namespace HDTrailersNETDownloader
             validurls.Add("http://www.hd-trailers.net/ComingSoon/");
             validurls.Add("http://www.hd-trailers.net/BluRay/");
             validurls.Add("http://www.hd-trailers.net/AcademyAward83/");
+            validurls.Add("http://www.hd-trailers.net//library/0/");
+            validurls.Add("http://www.hd-trailers.net//library/a/");
+            validurls.Add("http://www.hd-trailers.net//library/b/");
+            validurls.Add("http://www.hd-trailers.net//library/c/");
+            validurls.Add("http://www.hd-trailers.net//library/d/");
+            validurls.Add("http://www.hd-trailers.net//library/e/");
+            validurls.Add("http://www.hd-trailers.net//library/f/");
+            validurls.Add("http://www.hd-trailers.net//library/g/");
+            validurls.Add("http://www.hd-trailers.net//library/h/");
+            validurls.Add("http://www.hd-trailers.net//library/i/");
+            validurls.Add("http://www.hd-trailers.net//library/j/");
+            validurls.Add("http://www.hd-trailers.net//library/k/");
+            validurls.Add("http://www.hd-trailers.net//library/l/");
+            validurls.Add("http://www.hd-trailers.net//library/m/");
+            validurls.Add("http://www.hd-trailers.net//library/n/");
+            validurls.Add("http://www.hd-trailers.net//library/o/");
+            validurls.Add("http://www.hd-trailers.net//library/p/");
+            validurls.Add("http://www.hd-trailers.net//library/q/");
+            validurls.Add("http://www.hd-trailers.net//library/r/");
+            validurls.Add("http://www.hd-trailers.net//library/s/");
+            validurls.Add("http://www.hd-trailers.net//library/t/");
+            validurls.Add("http://www.hd-trailers.net//library/u/");
+            validurls.Add("http://www.hd-trailers.net//library/v/");
+            validurls.Add("http://www.hd-trailers.net//library/w/");
+            validurls.Add("http://www.hd-trailers.net//library/x/");
+            validurls.Add("http://www.hd-trailers.net//library/y/");
+            validurls.Add("http://www.hd-trailers.net//library/z/");
         }
         ~hdTrailersNetWeb()
         {

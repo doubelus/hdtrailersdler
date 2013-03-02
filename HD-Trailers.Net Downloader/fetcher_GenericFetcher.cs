@@ -43,7 +43,6 @@ namespace HDTrailersNETDownloader
                     LoadItem(mi);
                     mi.needLoad = false;
                 }
-
                 return mi;
             }
             set

@@ -41,7 +41,7 @@ namespace HDTrailersNETDownloader
                 int best = 0;
                 foreach (String trailer in trailers)
                 {
-                    if (trailer.Contains("trailerinfo") && trailer.Contains("href"))
+                    if (trailer.Contains("trailerinfo") && trailer.Contains("href") && trailer.Contains("http:"))
                     {
                         string type = StringFunctions.subStrBetween(trailer, "<b>", "</b>");
                         int match = StringFunctions.countMach(type, mi.name);
@@ -52,10 +52,16 @@ namespace HDTrailersNETDownloader
                             string[] links = StringFunctions.splitBetween(trailer, "<a", "</a>");
                             foreach (String linkStr in links)
                             {
-                                string link = System.Web.VirtualPathUtility.ToAbsolute("~" + StringFunctions.subStrBetween(linkStr, "href=\"", "\""));
+//                                string link = System.Web.VirtualPathUtility.ToAbsolute(StringFunctions.subStrBetween(linkStr, "href=\"", "\""));
+//                                string link = System.Web.VirtualPathUtility.ToAbsolute("~" + StringFunctions.subStrBetween(linkStr, "href=\"", "\""));
+                                string link = StringFunctions.subStrBetween(linkStr, "href=\"", "\"");
                                 string size = StringFunctions.subStrBetween(linkStr, ">");
                                 size = size.ToLowerInvariant();
                                 mi.nvc.Add(size, link);
+                                for (int n = 0; n < mi.nvc.Count; n++)
+                                    Console.WriteLine(mi.nvc[n]);
+                                string test = mi.nvc.Get(size);
+                                string test2 = "(" + test + ")";
                             }
                         }
                     }
@@ -63,6 +69,13 @@ namespace HDTrailersNETDownloader
                 string posterUrl = "http://www.trailerfreaks.com/" + StringFunctions.subStrBetween(main, "<img src = \"", "\"");
                 mi.nvc.Add("poster", posterUrl);
                 mi.imdbId = StringFunctions.subStrBetween(main, "www.imdb.com/title/", "/");
+                for (int n = 0; n < mi.nvc.Count; n++)
+
+                    Console.WriteLine(mi.nvc[n]);
+
+                foreach (string s in mi.nvc.Keys)
+
+                    Console.WriteLine(mi.nvc[s]);
             }
             catch (Exception e)
             {

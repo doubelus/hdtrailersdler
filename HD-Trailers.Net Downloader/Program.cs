@@ -38,7 +38,7 @@ namespace HDTrailersNETDownloader
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
 //        static List<string> extra; 
-        static string Version = "HD-Trailers.Net Downloader v2.0.13";
+        static string Version = "HD-Trailers.Net Downloader v2.0.14";
         static int NewTrailerCount = 0;
         [PreEmptive.Attributes.Setup(CustomEndpoint = "so-s.info/PreEmptive.Web.Services.Messaging/MessagingServiceV2.asmx")]
         [PreEmptive.Attributes.Teardown()]
@@ -317,6 +317,7 @@ namespace HDTrailersNETDownloader
         {
             string qualPreference = "";
             string newtitle;
+            string MovieName;
             log.WriteLine("");
             log.WriteLine("Next trailer: " + title);
 
@@ -347,6 +348,37 @@ namespace HDTrailersNETDownloader
             }
             string tempTrailerURL = GetPreferredURL(nvc, config.QualityPreference, ref qualPreference);
             string fname = LegalFileName(title);
+            Regex reg = new Regex("\\(([^)]*)\\)");
+            MovieName = reg.Replace(fname, "");
+            //                String MovieName = "The Pruitt-Igoe Myth";
+            MovieName = MovieName.Trim();
+            if ((config.IncludeGenres.Length == 0) ||
+                (config.ExcludeGenres.Length == 0) ||
+                (config.IncludeLanguages.Length == 0) ||
+                (config.IncludeGenres.IndexOf("all", StringComparison.OrdinalIgnoreCase) == -1) ||
+                (config.ExcludeGenres.IndexOf("none", StringComparison.OrdinalIgnoreCase) == -1) ||
+                (config.IncludeLanguages.IndexOf("all", StringComparison.OrdinalIgnoreCase) == -1) ||
+                config.CreateXBMCNfoFile)
+            {
+                log.WriteLine("Looking up MovieName on IMDB");
+                if ((link.imdbId != null) && (link.imdbId.Length > 0))
+                {
+                    imdb.ImdbLookup(link.imdbId);
+                }
+                else
+                {
+                     imdb.ImdbLookup(MovieName);
+                }
+            }
+            if (config.PlexFilenames)
+            {
+                if(imdb.Year.Length == 0) {
+                    DateTime thisyear =  DateTime.Now;
+                    fname = MovieName + " (" + thisyear.Year.ToString() + ")";
+                } else {
+                    fname = MovieName + " (" + imdb.Year + ")";
+                }
+        }
             string dirName = ManageDirectory(fname);
 
             // Compare download url to sitestoskip item in config. If match detected, skip and log.
@@ -423,28 +455,7 @@ namespace HDTrailersNETDownloader
                 AddToEmailSummary(title + ": Title found in exclusions list. Skipping...");
                 return;
             }
-            if ((config.IncludeGenres.Length == 0) ||
-                (config.ExcludeGenres.Length == 0) ||
-                (config.IncludeLanguages.Length == 0) ||
-                (config.IncludeGenres.IndexOf("all", StringComparison.OrdinalIgnoreCase) == -1) || 
-                (config.ExcludeGenres.IndexOf("none", StringComparison.OrdinalIgnoreCase) == -1) || 
-                (config.IncludeLanguages.IndexOf("all", StringComparison.OrdinalIgnoreCase) == -1) || 
-                config.CreateXBMCNfoFile)
-            {
-                Regex reg = new Regex("\\(([^)]*)\\)");
-                string MovieName = reg.Replace(fname, "");
-                //                String MovieName = "The Pruitt-Igoe Myth";
-                MovieName = MovieName.Trim();
-                log.WriteLine("Looking up MovieName on IMDB");
-                if ((link.imdbId != null) && (link.imdbId.Length > 0))
-                {
-                    imdb.ImdbLookup(link.imdbId);
-                }
-                else
-                {
-                    imdb.ImdbLookup(MovieName);
-                }
-            }
+
             if ((config.IncludeGenres.Length != 0) &&
                 (config.IncludeGenres.IndexOf("all", StringComparison.OrdinalIgnoreCase) == -1))
             {

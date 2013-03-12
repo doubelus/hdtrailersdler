@@ -435,6 +435,7 @@ namespace HDTrailersNETDownloader
             {
                 newtitle = title;
             }
+            newtitle = Regex.Replace(newtitle, " Mirror", "", RegexOptions.IgnoreCase);
             if (config.ConsiderTheatricalandNumberedTrailersasIdentical)
             {
                 if (!newtitle.Contains("Teaser"))

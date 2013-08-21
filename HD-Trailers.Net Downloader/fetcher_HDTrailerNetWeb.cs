@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
 using System.Text;
+using System.Web;
+using System.IO;
 
 namespace HDTrailersNETDownloader
 {
@@ -60,7 +62,9 @@ namespace HDTrailersNETDownloader
                 string[] tempStringArray = StringFunctions.splitBetween(data,"<td class=\"indexTableTrailerImage\">","</td>");
                 for (int i = 0; i < tempStringArray.Length; i++)
                 {
-                    string name = StringFunctions.subStrBetween(tempStringArray[i], "title=\"", "\"");
+                    string name1 = StringFunctions.subStrBetween(tempStringArray[i], "title=\"", "\"");
+                    string name;
+                    name = HttpUtility.HtmlDecode(name1);
                     string tmpurl = "http://www.hd-trailers.net" + StringFunctions.subStrBetween(tempStringArray[i], "href=\"", "\"");
 
                     Add(new MovieItem(name, tmpurl, ""));

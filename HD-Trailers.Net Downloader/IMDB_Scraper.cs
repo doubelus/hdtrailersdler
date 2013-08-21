@@ -94,6 +94,7 @@ namespace IMDb_Scraper
            if (searchEngine.ToLower().Equals("ask")) url = AskSearch + MovieName + " (" + thisyearstr + " or " + lastyearstr + ")";
             string html = getUrlData(url);
             ArrayList imdbUrls = matchAll(@"<a href=""(http://www.imdb.com/title/tt\d{7}/)"".*?>.*?</a>", html);
+
             if (imdbUrls.Count > 0)
                 return (string)imdbUrls[0]; //return first IMDb result
             else if (searchEngine.ToLower().Equals("google")) //if Google search fails

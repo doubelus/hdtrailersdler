@@ -45,12 +45,14 @@ namespace HDTrailersNETDownloader
         static void Main(string[] args)
         {
             bool help = false;
+            List<string> names = new List<string> ();
             var options = new OptionSet() 
                 .Add("e|edit", e => EditConfigFile())
+                .Add ("i|ini=",   delegate (string v) { names.Add (v); })
                 .Add("?|h|help", h => DisplayHelp());
                 
             options.Parse(args);
-            
+
             try
             {
                 if(help) {
@@ -58,8 +60,13 @@ namespace HDTrailersNETDownloader
                 }
                 //               RssItems feedItems;
                 string AppDatadirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader");
-                if (!Init())
-                    return;
+                if (names.Count== 1) {
+                    config.Init(names[0]);
+                }
+                else
+                {
+                    config.Init();
+                }
                 log.WriteLine(Version);
                 log.WriteLine("CodePlex: http://www.codeplex.com/hdtrailersdler");
                 log.WriteLine("HD Trailer Blog: http://www.hd-trailers.net");
@@ -321,19 +328,27 @@ namespace HDTrailersNETDownloader
             log.WriteLine("");
             log.WriteLine("Next trailer: " + title);
 
+
+            NameValueCollection nvc;
+            if (link.nvc.Count == 4)
+            {
+                nvc = link.nvc;
+            }
+            else
+            {
+                nvc = GetDownloadUrls(link.url, ref title);
+            }
+            if ((nvc == null) || (nvc.Count == 0))
+            {
+                log.WriteLine("Error: No Download URLs found. Skipping...");
+                return;
+            }
+
+            //            if ((config.TrailersOnly) && (!title.Contains("Trailer")))
             if ((config.TrailersOnly) && (!title.Contains("Trailer")))
             {
                 log.WriteLine("Title not a trailer. Skipping...");
                 AddToEmailSummary(title + " (" + qualPreference + ") : Title not a trailer. Skipping...");
-                return;
-            }
-
-            NameValueCollection nvc;
-            //            nvc = GetDownloadUrls(link, title);
-            nvc = link.nvc;
-            if ((nvc == null) || (nvc.Count == 0))
-            {
-                log.WriteLine("Error: No Download URLs found. Skipping...");
                 return;
             }
 
@@ -350,7 +365,7 @@ namespace HDTrailersNETDownloader
             string fname = LegalFileName(title);
             Regex reg = new Regex("\\(([^)]*)\\)");
             MovieName = reg.Replace(fname, "");
-            //                String MovieName = "The Pruitt-Igoe Myth";
+//            MovieName = "The Butler";
             MovieName = MovieName.Trim();
             if ((config.IncludeGenres.Length == 0) ||
                 (config.ExcludeGenres.Length == 0) ||
@@ -605,7 +620,23 @@ namespace HDTrailersNETDownloader
             }
             catch (Exception e)
             {
-                log.WriteLine("Exception in ReadDataFromLink (" + link + ")");
+                //Get a StackTrace object for the exception
+                StackTrace st = new StackTrace(e, true);
+
+                //Get the first stack frame
+                StackFrame frame = st.GetFrame(0);
+
+                //Get the file name
+                string fileName = frame.GetFileName();
+                //Get the method name
+                string methodName = frame.GetMethod().Name;
+
+                //Get the line number from the stack frame
+                int line = frame.GetFileLineNumber();
+
+                //Get the column number
+                int col = frame.GetFileColumnNumber();
+                log.WriteLine("Exception in ReadDataFromLink (" + link + "): " + methodName + " " + line + " " + col);
                 log.WriteLine(e.ToString());
                 return null;
             }
@@ -617,7 +648,7 @@ namespace HDTrailersNETDownloader
         /// <param name="link"></param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        static NameValueCollection GetDownloadUrls(string link, string title)
+        static NameValueCollection GetDownloadUrls(string link, ref string title)
         {
             try
             {
@@ -628,7 +659,7 @@ namespace HDTrailersNETDownloader
                 // CurrentSource = data;
 
                 //  Original line iaj 04/06/2010
-                int pos = data.IndexOf(@"Download</strong>:");
+                int pos = data.IndexOf("<table class=\"bottomTable\">");
                 //                String MovieName = "The Pruitt-Igoe Myth";
                 //                Regex reg = new Regex("\\(([^)]*)\\)");
                 //                string MovieName = reg.Replace(title, "");
@@ -637,28 +668,32 @@ namespace HDTrailersNETDownloader
                     return nvc;
 
                 // find the urls for the movies, extract the string following "Download:
-                string tempString = data.Substring(pos + 18);
+                string tempString = StringFunctions.subStrBetween(data, "<table class=\"bottomTable\">", "</table>");
                 // find the end of the screen line (a </p> or a <br />)
-                string[] tempStringArray = tempString.Split(new string[] { @"</p>", @"<br" }, StringSplitOptions.None);
+//                string[] tempStringArray = tempString.Split(new string[] { @"</p>", @"<br" }, StringSplitOptions.None);
+                string[] tempStringArray = StringFunctions.splitBetween(tempString, "<td class=\"bottomTableResolution\"><a href=", "</a></td>");
                 tempString = tempStringArray[0];
 
                 // extract all the individual links from the tempString
                 // Sample link: [0] = "<a href=\"http://movies.apple.com/movies/magnolia_pictures/twolovers/twolovers-clip_h480p.mov\">480p</a>"
-                tempStringArray = tempString.Split(new Char[] { ',' });
+                //tempStringArray = tempString.Split(new Char[] { ',' });
 
-                for (int i = 0; i < tempStringArray.Length; i++)
+                //                for (int i = 0; i < tempStringArray.Length; i++)
+                for (int i = 0; i < 3; i++)
                 {
-                    string s1 = tempStringArray[i].Substring(tempStringArray[i].IndexOf(">") + 1, (tempStringArray[i].IndexOf(@"</a>") - tempStringArray[i].IndexOf(">") - 1));
-                    string s2 = tempStringArray[i].Substring(tempStringArray[i].IndexOf("http"), tempStringArray[i].IndexOf("\">") - tempStringArray[i].IndexOf("http"));
+                    string s1 = tempStringArray[i].Substring(tempStringArray[i].IndexOf(">") + 1);
+                    string s2 = tempStringArray[i].Substring(tempStringArray[i].IndexOf("http"), tempStringArray[i].IndexOf("\" rel=\"") - tempStringArray[i].IndexOf("http"));
 
                     nvc.Add(s1, s2);
                 }
 
-
+                tempString = StringFunctions.subStrBetween(tempStringArray[0], "title=\"", "</a></td>");
+                tempString = StringFunctions.subStrBetween(tempStringArray[0], "- ", " -");
+                title = title + " - " + tempString;
                 // now find the poster url
                 // look for first 'Link to Catalog' then pick the src attribute from the first img tag
 
-                tempString = data.Substring(data.IndexOf("<strong>Link to Catalog</strong>"));
+                tempString = StringFunctions.subStrBetween(data, "<div class=\"posterBlock\">", "</div>");
                 tempString = tempString.Substring(tempString.IndexOf("<img "));
                 tempString = tempString.Substring(tempString.IndexOf("src=\"") + 5);
                 tempString = tempString.Substring(0, tempString.IndexOf("\""));

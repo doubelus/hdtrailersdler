@@ -108,6 +108,10 @@ namespace HDTrailersNETDownloader
         }
         public void Init()
         {
+            Init("HD-Trailers.Net Downloader.config");
+        }
+        public void Init(string inifile)
+        {
             //Load our config
             // Get the AppSettings section.
             Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
@@ -135,11 +139,15 @@ namespace HDTrailersNETDownloader
             // close the stream
             //tw.Close();
 
-            XElement appSetting = System.Xml.Linq.XElement.Load(Path.Combine(userFilePath, "HD-Trailers.Net Downloader.config"));
+            XElement appSetting = System.Xml.Linq.XElement.Load(Path.Combine(userFilePath, inifile));
 
              this.QualityPreference = GetStringArrayFromAppsettings(appSetting, "QualityPreference", "720p,480p");
             this.SitesToSkip = GetStringArrayFromAppsettings(appSetting, "SitesToSkip", "");
             this.TrailerDownloadFolder = GetStringFromAppsettings(appSetting, "TrailerDownloadFolder", "").TrimEnd('\\');
+            if (!Directory.Exists(this.TrailerDownloadFolder))
+            {
+                this.TrailerDownloadFolder = "";
+            }
             if (this.TrailerDownloadFolder.Length == 0)
             {
                 this.TrailerDownloadFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "HD-Trailers.Net Downloader");

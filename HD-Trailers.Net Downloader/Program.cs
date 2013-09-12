@@ -38,7 +38,7 @@ namespace HDTrailersNETDownloader
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
 //        static List<string> extra; 
-        static string Version = "HD-Trailers.Net Downloader v2.0.14";
+        static string Version = "HD-Trailers.Net Downloader v2.1.2";
         static int NewTrailerCount = 0;
         [PreEmptive.Attributes.Setup(CustomEndpoint = "so-s.info/PreEmptive.Web.Services.Messaging/MessagingServiceV2.asmx")]
         [PreEmptive.Attributes.Teardown()]
@@ -365,7 +365,7 @@ namespace HDTrailersNETDownloader
             string fname = LegalFileName(title);
             Regex reg = new Regex("\\(([^)]*)\\)");
             MovieName = reg.Replace(fname, "");
-//            MovieName = "The Butler";
+//            MovieName = "Monsters University";
             MovieName = MovieName.Trim();
             if ((config.IncludeGenres.Length == 0) ||
                 (config.ExcludeGenres.Length == 0) ||

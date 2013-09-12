@@ -11,6 +11,6 @@
     <VerifyUploadedFiles>false</VerifyUploadedFiles>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <StartArguments>-i="HD-Trailers.Net DownloaderRSSWeb.config"</StartArguments>
+    <StartArguments>-i="HD-Trailers.Net Downloader OpeningThisWeek.config"</StartArguments>
   </PropertyGroup>
 </Project>

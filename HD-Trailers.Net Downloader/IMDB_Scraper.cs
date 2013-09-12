@@ -161,6 +161,11 @@ namespace IMDb_Scraper
                 Nominations = match(@"(\d{1,4}) nominations", html);
                 Tagline = match(@"Tagline:</h5>.*?<div class=""info-content"">(.*?)(<a|</div)", html);
                 MpaaRating = match(@"MPAA</a>:</h5><div class=""info-content"">Rated (G|PG|PG-13|PG-14|R|NC-17|X) ", html);
+                if (MpaaRating.Length == 0)
+                {
+                    // If MPAA rating is not set check the Certification
+                    MpaaRating = match(@"Certification:</h5><div class=""info-content""><a href=""/search/title\?certificates=us:g"">USA:(G|PG|PG-13|PG-14|R|NC-17|X)", html);
+                }
                 Votes = match(@">(\d+,?\d*) votes<", html);
                 Languages = matchAll(@"<a.*?>(.*?)</a>", match(@"Language.?:(.*?)(</div>|>.?and )", html));
                 Countries = matchAll(@"<a.*?>(.*?)</a>", match(@"Country:(.*?)(</div>|>.?and )", html));

@@ -57,6 +57,8 @@ G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloa
 G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
 G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
 G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\PreEmptive.Attributes.dll
-G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.csprojResolveAssemblyReference.cache
 G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
 G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\YoutubeExtractor.dll
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\YoutubeExtractor.xml
+G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.csprojResolveAssemblyReference.cache

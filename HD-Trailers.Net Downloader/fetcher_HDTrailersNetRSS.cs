@@ -13,8 +13,9 @@ namespace HDTrailersNETDownloader
         public hdTrailersNetRSS()
         {
             validurls = new List<string>();
-
-            validurls.Add("http://www.hd-trailers.net/blog/feed/");
+        
+            validurls.Add("http://feeds.hd-trailers.net/hd-trailers");
+            validurls.Add("http://feedpress.me/hd-trailerss");
         }
         ~hdTrailersNetRSS()
         {

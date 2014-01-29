@@ -17,7 +17,7 @@ namespace HDTrailersNETDownloader
         public Logging()
         {
             verboseLogging = false;
-            physicalLog = false;
+            physicalLog = true;
         }
 
         public void Init(bool verbose, bool physLog) 

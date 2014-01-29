@@ -13,14 +13,18 @@ namespace HDTrailersNETDownloader
 {
     class Config
     {
+        public bool OriginalConfigFile  { get; private set; }
         public string[] QualityPreference { get; private set; }
         public string[] SitesToSkip { get; private set; }
         public string TrailerDownloadFolder { get; private set; }
         public string MetadataDownloadFolder { get; private set; }
+        public string Trailer3DDownloadFolder { get; private set; }
+        public string Metadata3DDownloadFolder { get; private set; }
         public bool CreateFolder { get; private set; }
         public bool VerboseLogging { get; private set; }
         public bool PauseWhenDone { get; private set; }
         public bool PhysicalLog { get; private set; }
+
         public int KeepFor { get; private set; }
         public bool DeleteToRecycleBin { get; private set; }
         public bool GrabPoster { get; private set; }
@@ -53,11 +57,13 @@ namespace HDTrailersNETDownloader
         public string[] UserAgentId { get; private set; }
         public string[] UserAgentString { get; private set; }
         public string FeedAddress { get; private set; }
+        public string YouTubePlayList { get; private set; }
         public bool RunEXE { get; private set; }
         public bool RunOnlyWhenNewTrailers { get; private set; }
         public string Executable { get; private set; }
         public string EXEArguements { get; private set; }
         protected string temp;
+
         public Config()
         {
             this.PhysicalLog = false;
@@ -141,7 +147,8 @@ namespace HDTrailersNETDownloader
 
             XElement appSetting = System.Xml.Linq.XElement.Load(Path.Combine(userFilePath, inifile));
 
-             this.QualityPreference = GetStringArrayFromAppsettings(appSetting, "QualityPreference", "720p,480p");
+            this.OriginalConfigFile = GetBooleanFromAppsettings(appSetting, "OriginalConfigFile", "true");
+            this.QualityPreference = GetStringArrayFromAppsettings(appSetting, "QualityPreference", "720p,480p");
             this.SitesToSkip = GetStringArrayFromAppsettings(appSetting, "SitesToSkip", "");
             this.TrailerDownloadFolder = GetStringFromAppsettings(appSetting, "TrailerDownloadFolder", "").TrimEnd('\\');
             if (!Directory.Exists(this.TrailerDownloadFolder))
@@ -150,7 +157,7 @@ namespace HDTrailersNETDownloader
             }
             if (this.TrailerDownloadFolder.Length == 0)
             {
-                this.TrailerDownloadFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "HD-Trailers.Net Downloader");
+                this.TrailerDownloadFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "HD-Trailers.Net Downloader Trailers");
                 if (!Directory.Exists(this.TrailerDownloadFolder))
                 {
                     Directory.CreateDirectory(this.TrailerDownloadFolder);
@@ -159,7 +166,26 @@ namespace HDTrailersNETDownloader
             this.MetadataDownloadFolder = GetStringFromAppsettings(appSetting, "MetadataDownloadFolder", "").TrimEnd('\\');
             if (this.MetadataDownloadFolder.Length == 0)
             {
-                this.MetadataDownloadFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
+                this.MetadataDownloadFolder = TrailerDownloadFolder;
+            }
+
+            this.Trailer3DDownloadFolder = GetStringFromAppsettings(appSetting, "Trailer3DDownloadFolder", "").TrimEnd('\\');
+            if (!Directory.Exists(this.Trailer3DDownloadFolder))
+            {
+                this.Trailer3DDownloadFolder = "";
+            }
+            if (this.Trailer3DDownloadFolder.Length == 0)
+            {
+                this.Trailer3DDownloadFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "HD-Trailers.Net Downloader 3D Trailers");
+                if (!Directory.Exists(this.Trailer3DDownloadFolder))
+                {
+                    Directory.CreateDirectory(this.Trailer3DDownloadFolder);
+                }
+            }
+            this.Metadata3DDownloadFolder = GetStringFromAppsettings(appSetting, "Metadata3DDownloadFolder", "").TrimEnd('\\');
+            if (this.Metadata3DDownloadFolder.Length == 0)
+            {
+                this.Metadata3DDownloadFolder = Trailer3DDownloadFolder;
             }
             this.GrabPoster = GetBooleanFromAppsettings(appSetting, "GrabPoster", "true");
             this.XBMCFilenames = GetBooleanFromAppsettings(appSetting, "XBMCFileNames", "false");
@@ -171,6 +197,10 @@ namespace HDTrailersNETDownloader
             this.VerboseLogging = GetBooleanFromAppsettings(appSetting, "VerboseLogging", "true");
             this.PhysicalLog = GetBooleanFromAppsettings(appSetting, "PhysicalLog", "true");
             this.PauseWhenDone = GetBooleanFromAppsettings(appSetting, "PauseWhenDone", "true");
+            if (this.OriginalConfigFile)
+            {
+                this.PauseWhenDone = true;
+            }
             this.KeepFor = GetInt32FromAppsettings(appSetting, "KeepFor", "0");
             this.DeleteToRecycleBin = GetBooleanFromAppsettings(appSetting, "DeleteToRecycleBin", "true");
             this.MinTrailerSize = GetInt32FromAppsettings(appSetting, "MinTrailerSize", "100000");
@@ -197,6 +227,7 @@ namespace HDTrailersNETDownloader
             this.UserAgentId = GetStringArrayFromAppsettings(appSetting, "UserAgentIds", "");
             this.UserAgentString = GetStringArrayFromAppsettings(appSetting, "UserAgentStrings", "");
             this.FeedAddress = GetStringFromAppsettings(appSetting, "FeedAddress", @"http://feeds.hd-trailers.net/hd-trailers");
+            this.YouTubePlayList = GetStringFromAppsettings(appSetting, "YouTubePlayList", @"");
             this.RunEXE = GetBooleanFromAppsettings(appSetting, "RunEXE", "false");
             this.RunOnlyWhenNewTrailers = GetBooleanFromAppsettings(appSetting, "RunOnlyWhenNewTrailers", "false");
             this.Executable = GetStringFromAppsettings(appSetting, "Executable", "");
@@ -214,6 +245,8 @@ namespace HDTrailersNETDownloader
             sb.AppendLine();
             sb.AppendFormat("{0}: {1}\n", "TrailerDownloadFolder", TrailerDownloadFolder.ToString());
             sb.AppendFormat("{0}: {1}\n", "MetadataDownloadFolder", MetadataDownloadFolder.ToString());
+            sb.AppendFormat("{0}: {1}\n", "3DTrailerDownloadFolder", Trailer3DDownloadFolder.ToString());
+            sb.AppendFormat("{0}: {1}\n", "3DMetadataDownloadFolder", Metadata3DDownloadFolder.ToString());
             sb.AppendFormat("{0}: {1}\n", "GrabPoster", GrabPoster.ToString());
             sb.AppendFormat("{0}: {1}\n", "CreateFolder", CreateFolder.ToString());
             sb.AppendFormat("{0}: {1}\n", "VerboseLogging", VerboseLogging.ToString());
@@ -251,6 +284,7 @@ namespace HDTrailersNETDownloader
                     sb.AppendFormat("UserAgentString({0}): {1}\n", i+1, UserAgentString[i]);
             }
             sb.AppendFormat("{0}: {1}\n", "FeedAddress", FeedAddress.ToString());
+            sb.AppendFormat("{0}: {1}\n", "YouTubePlayList", YouTubePlayList.ToString());
             sb.AppendFormat("{0}: {1}\n", "EmailAddress", EmailAddress.ToString());
             sb.AppendFormat("{0}: {1}\n", "EmailSummary", EmailSummary.ToString());
             sb.AppendFormat("{0}: {1}\n", "SMTPServer", SMTPServer.ToString());

@@ -16,6 +16,7 @@ using NDesk.Options;
 using IMDb_Scraper;
 using Nfo.Movie;
 using Nfo.File;
+using YoutubeExtractor;
 
 namespace HDTrailersNETDownloader
 {
@@ -38,7 +39,7 @@ namespace HDTrailersNETDownloader
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
 //        static List<string> extra; 
-        static string Version = "HD-Trailers.Net Downloader v2.1.2";
+        static string Version = "HD-Trailers.Net Downloader v2.2.4";
         static int NewTrailerCount = 0;
         [PreEmptive.Attributes.Setup(CustomEndpoint = "so-s.info/PreEmptive.Web.Services.Messaging/MessagingServiceV2.asmx")]
         [PreEmptive.Attributes.Teardown()]
@@ -58,9 +59,15 @@ namespace HDTrailersNETDownloader
                 if(help) {
                     DisplayHelp();
                 }
-                //               RssItems feedItems;
+
+              //               RssItems feedItems;
+                log.Init(true, true);
+
                 string AppDatadirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader");
-                if (names.Count== 1) {
+//                if (!Init())
+//                    return;
+                if (names.Count == 1)
+                {
                     config.Init(names[0]);
                 }
                 else
@@ -79,25 +86,39 @@ namespace HDTrailersNETDownloader
                 log.WriteLine("CommonApplicateData: " + System.Environment.GetFolderPath(System.Environment.SpecialFolder.CommonApplicationData));
                 log.WriteLine("LocalApplicationData: " + Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
                 log.WriteLine("LocalAppData: " + Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader"));
+                log.WriteLine("Trailer Folder:    " + config.TrailerDownloadFolder);
+                log.WriteLine("3D Trailer Folder: " + config.Trailer3DDownloadFolder);
 
                 if (!CheckConfigParameter())
                     return;
-
+                if (config.OriginalConfigFile)
+                {
+                    log.WriteLine("+----------------------------------------------+");
+                    log.WriteLine("|                                              |");
+                    log.WriteLine("| Please Edit the config file as appropriate   |");
+                    log.WriteLine("| At a minimum, the OriginalConfigFile key     |");
+                    log.WriteLine("| must be  changed from true to false.         |");
+                    log.WriteLine("|                                              |");
+                    log.WriteLine("+----------------------------------------------+");
+                    if (config.PauseWhenDone)
+                        Console.ReadLine();
+                    return;
+                }
                 //Delete folders/files if needed
                 DeleteEm();
 
-                hdTrailersNetRSS itemsHD = new hdTrailersNetRSS();
-                if (itemsHD.IsUrlValid(config.FeedAddress) != System.String.Empty)
-                {
-                    log.WriteLine("Connecting using: hdTrailersNetRSS class");
-                    itemsHD.GetFeedItems(config.FeedAddress);
-                    log.WriteLine("Number of Items in Feed:" + itemsHD.Count);
-
-                    for (int i = 0; i < itemsHD.Count; i++)
-                    {
-                        ProcessFeedItem(itemsHD[i].name, itemsHD[i]);
-                    }
-                }
+//                hdTrailersNetRSS itemsHD = new hdTrailersNetRSS();
+//                if (itemsHD.IsUrlValid(config.FeedAddress) != System.String.Empty)
+//                {
+//                    log.WriteLine("Connecting using: hdTrailersNetRSS class");
+//                    itemsHD.GetFeedItems(config.FeedAddress);
+//                    log.WriteLine("Number of Items in Feed:" + itemsHD.Count);
+//
+//                    for (int i = 0; i < itemsHD.Count; i++)
+//                    {
+//                        ProcessFeedItem(itemsHD[i].name, itemsHD[i]);
+//                    }
+//                }
                 hdTrailersNetRSS2 itemsHD2 = new hdTrailersNetRSS2();
                 if (itemsHD2.IsUrlValid(config.FeedAddress) != System.String.Empty)
                 {
@@ -142,6 +163,22 @@ namespace HDTrailersNETDownloader
                         ProcessFeedItem(itemsMM[i].name, itemsMM[i]);
                     }
                 }
+                YouTube3D itemsYT = new YouTube3D();
+                if (itemsYT.IsUrlValid(config.FeedAddress) != System.String.Empty)
+                {
+                    if(config.YouTubePlayList.Length != 0) {
+                        log.WriteLine("Connecting using: YouTube class");
+                        itemsYT.GetFeedItems(config.FeedAddress + "playlist?list=" + config.YouTubePlayList);
+                        log.WriteLine("Number of Items in Feed:" + itemsYT.Count);
+                        for (int i = 0; i < itemsYT.Count; i++)
+                        {
+                            ProcessFeedItem(itemsYT[i].name, itemsYT[i]);
+                        }
+                    } else {
+                        log.WriteLine("When using YouTube, you must specify a PlayList Address");
+                        log.WriteLine("The Playlist address is the code after \"playlist?list=\" in the playlist URL");
+                    }
+                }
                 //Do housekeeping like serializing exclusions and sending email summary
                 log.VerboseWrite("");
                 log.VerboseWrite("Housekeeping:");
@@ -157,7 +194,15 @@ namespace HDTrailersNETDownloader
                     RunEXE();
 
                 log.WriteLine("Done");
-
+                if (config.OriginalConfigFile)
+                {
+                    log.WriteLine("+-------------------------------------------------------+");
+                    log.WriteLine("+                                                       +");
+                    log.WriteLine("+ Please Edit the config file as appropriate            +");
+                    log.WriteLine("+ At a minimum, OriginalConfigFile must be set to false +");
+                    log.WriteLine("+                                                       +");
+                    log.WriteLine("+-------------------------------------------------------+");
+                }
                 if (config.PauseWhenDone)
                     Console.ReadLine();
             }
@@ -286,9 +331,14 @@ namespace HDTrailersNETDownloader
         /// </summary>
         /// <param name="fname">trailername</param>
         /// <returns>the complete qualfied path for the target directory</returns>
-        static string ManageDirectory(string fname)
+        static string ManageDirectory(string fname, bool is3DTrailer)
         {
-            string dirName = config.TrailerDownloadFolder;
+            string dirName;
+            if(is3DTrailer) {
+                dirName = config.Trailer3DDownloadFolder;
+            } else {
+                dirName = config.TrailerDownloadFolder;
+            }
             if (!config.CreateFolder)
             {
                 return dirName;
@@ -296,18 +346,22 @@ namespace HDTrailersNETDownloader
 
             string[] dirList;
 
-            dirList = Directory.GetDirectories(config.TrailerDownloadFolder, fname);
+            dirList = Directory.GetDirectories(dirName, fname);
 
             if ((dirList == null) || (dirList.Length != 1))
             {
-                dirList = Directory.GetDirectories(config.TrailerDownloadFolder, "????-??-?? " + fname);
+                if(config.AddDates) {
+                    dirList = Directory.GetDirectories(dirName, "????-??-?? " + fname);
+                } else {
+                    dirList = Directory.GetDirectories(dirName, fname);
+                }
             }
 
             if ((dirList != null) && (dirList.Length == 1))
             {
                 // a subdirectory with this name exists, we are done
-                dirName = dirList[0];
-                return dirName;
+                //dirName = dirList[0];
+                return dirList[0];
             }
 
             // we didn't find a match with the direct name or with a preceeding date info
@@ -325,12 +379,14 @@ namespace HDTrailersNETDownloader
             string qualPreference = "";
             string newtitle;
             string MovieName;
+            bool is3DTrailer;
+
             log.WriteLine("");
             log.WriteLine("Next trailer: " + title);
 
 
             NameValueCollection nvc;
-            if (link.nvc.Count == 4)
+            if ((link.nvc.Count == 4) || (link.url.IndexOf("youtube", StringComparison.CurrentCultureIgnoreCase) >= 0))
             {
                 nvc = link.nvc;
             }
@@ -361,12 +417,38 @@ namespace HDTrailersNETDownloader
 
                 log.VerboseWrite(sb.ToString());
             }
-            string tempTrailerURL = GetPreferredURL(nvc, config.QualityPreference, ref qualPreference);
+            if (title.IndexOf("3D", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                is3DTrailer = true;
+            }
+            else
+            {
+                is3DTrailer = false;
+            }
+
+            string tempTrailerURL;
+            if (link.url.IndexOf("youtube", StringComparison.CurrentCultureIgnoreCase) >= 0)
+            {
+                tempTrailerURL = link.url;
+                string remove = "3D TV";
+                if (title.IndexOf(remove, StringComparison.OrdinalIgnoreCase) >=0) {
+                    title = title.Remove(title.IndexOf(remove, StringComparison.OrdinalIgnoreCase),remove.Length);
+                }
+                remove = "3D";
+                if (title.IndexOf(remove, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    title = title.Substring(0, title.IndexOf(remove, StringComparison.OrdinalIgnoreCase));
+                }
+            }
+            else {
+                tempTrailerURL = GetPreferredURL(nvc, config.QualityPreference, ref qualPreference);
+            }
             string fname = LegalFileName(title);
             Regex reg = new Regex("\\(([^)]*)\\)");
             MovieName = reg.Replace(fname, "");
-//            MovieName = "Monsters University";
+
             MovieName = MovieName.Trim();
+//            MovieName = "The Legend of Hercules";
             if ((config.IncludeGenres.Length == 0) ||
                 (config.ExcludeGenres.Length == 0) ||
                 (config.IncludeLanguages.Length == 0) ||
@@ -387,25 +469,32 @@ namespace HDTrailersNETDownloader
             }
             if (config.PlexFilenames)
             {
-                if(imdb.Year.Length == 0) {
-                    DateTime thisyear =  DateTime.Now;
+                if (imdb.Year.Length == 0)
+                {
+                    DateTime thisyear = DateTime.Now;
                     fname = MovieName + " (" + thisyear.Year.ToString() + ")";
-                } else {
+                }
+                else
+                {
                     fname = MovieName + " (" + imdb.Year + ")";
                 }
-        }
-            string dirName = ManageDirectory(fname);
+            }
+//           else
+//           {
+//                fname = MovieName;
+//            }
+            string dirName = ManageDirectory(fname, is3DTrailer);
 
             // Compare download url to sitestoskip item in config. If match detected, skip and log.
             for (int t = 0; t < config.SitesToSkip.Count(); t++)
+            {
                 if (tempTrailerURL.Contains(config.SitesToSkip[t]))
                 {
                     log.WriteLine("Trailer source (" + config.SitesToSkip[t] + ") is identified as Site To Skip in config. Skipping...");
                     AddToEmailSummary("Trailer source (" + config.SitesToSkip[t] + ") is identified as Site To Skip in config. Skipping...");
                     return;
-
                 }
-
+            }
             if (tempTrailerURL == null)
             {
                 log.WriteLine("Preferred quality not available. Skipping...");
@@ -518,7 +607,14 @@ namespace HDTrailersNETDownloader
                 tempDirectoryCreated = true;
             }
 
-            tempBool = GetOrResumeTrailer(tempTrailerURL, fname, dirName, qualPreference, posterUrl);
+            if (link.url.IndexOf("youtube", StringComparison.CurrentCultureIgnoreCase) >= 0)
+            {
+                tempBool = YouTubeDownload(tempTrailerURL, LegalFileName(title), dirName, qualPreference);
+            }
+            else
+            {
+                tempBool = GetOrResumeTrailer(tempTrailerURL, LegalFileName(title), dirName, qualPreference, posterUrl);
+            }
             //Delete the directory if it didn't download
             if (tempBool == false && tempDirectoryCreated == true)
                 Directory.Delete(dirName);
@@ -679,7 +775,7 @@ namespace HDTrailersNETDownloader
                 //tempStringArray = tempString.Split(new Char[] { ',' });
 
                 //                for (int i = 0; i < tempStringArray.Length; i++)
-                for (int i = 0; i < 3; i++)
+                for (int i = 0; i < Math.Min(3, tempStringArray.Length); i++)
                 {
                     string s1 = tempStringArray[i].Substring(tempStringArray[i].IndexOf(">") + 1);
                     string s2 = tempStringArray[i].Substring(tempStringArray[i].IndexOf("http"), tempStringArray[i].IndexOf("\" rel=\"") - tempStringArray[i].IndexOf("http"));
@@ -687,9 +783,10 @@ namespace HDTrailersNETDownloader
                     nvc.Add(s1, s2);
                 }
 
-                tempString = StringFunctions.subStrBetween(tempStringArray[0], "title=\"", "</a></td>");
+                tempString = StringFunctions.subStrBetween(tempStringArray[0], "title=\"", "0p\">");
+                title = tempString.Remove(tempString.Length - 5, 5);
                 tempString = StringFunctions.subStrBetween(tempStringArray[0], "- ", " -");
-                title = title + " - " + tempString;
+
                 // now find the poster url
                 // look for first 'Link to Catalog' then pick the src attribute from the first img tag
 
@@ -714,25 +811,26 @@ namespace HDTrailersNETDownloader
         {
             try
             {
-                string tempString2 = null;
+                string tempstr = null;
+                string[] tempString2;
                 //Need a loop here to pick highest priority quality. 
                 for (int i = 0; i < quality.Length; i++)
                 {
                     //Does a trailer of the preferred quality exist? If so, set it.. if not, try the next one
-                    tempString2 = nvc.Get(quality[i]);
+                    tempString2 = nvc.GetValues(quality[i]);
                     if (tempString2 != null)
                     {
-                        tempString2 = nvc.Get(quality[i]).Replace(@"amp;", "");
+                        tempString2 = nvc.GetValues(quality[i]);
+                        tempstr = tempString2[0];
+                        tempstr = tempstr.Replace(@"amp;", "");
                         qualPref = quality[i];
 
                         //If you find one with the proper key, jump out of the for-loop
-                        if (tempString2 != null)
+                        if (tempstr != null)
                             i = quality.Length;
                     }
                 }
-
-                return tempString2;
-
+                return tempstr;
             }
             catch (Exception e)
             {
@@ -806,7 +904,39 @@ namespace HDTrailersNETDownloader
             return fName;
         }
 
+        static bool YouTubeDownload(string downloadURL, string fName, string dirName, string qualPref)
+        {
+            IEnumerable<VideoInfo> videoInfos = DownloadUrlResolver.GetDownloadUrls(downloadURL);
+            /*
+             * Select the first .mp4 video with 360p resolution
+             */
+            VideoInfo video = videoInfos
+                .First(info => info.VideoType == VideoType.Mp4 && info.Resolution == 720);
 
+            /*
+             * Create the video downloader.
+             * The first argument is the video to download.
+             * The second argument is the path to save the video file.
+             */
+            fName = MakeFileName(downloadURL, fName, dirName, qualPref);
+            log.VerboseWrite("Filename : " + fName);
+            if (File.Exists(Path.Combine(dirName, fName + video.VideoExtension)))
+            {
+                log.VerboseWrite("Deleting an existing file fragment prior to download");
+                File.Delete(Path.Combine(dirName, fName + video.VideoExtension));
+            }
+            var videoDownloader = new VideoDownloader(video, Path.Combine(dirName, fName + video.VideoExtension));
+
+            // Register the ProgressChanged event and print the current progress
+            videoDownloader.DownloadProgressChanged += (sender, args) => log.ConsoleWrite("Downloaded - " + args.ProgressPercentage + "%\r");
+
+            /*
+             * Execute the video downloader.
+             * For GUI applications note, that this method runs synchronously.
+             */
+            videoDownloader.Execute();
+            return true;
+        }
         static bool GetOrResumeTrailer(string downloadURL, string fName, string dirName, string qualPref, string posterUrl)
         {
             string Filename;
@@ -821,13 +951,14 @@ namespace HDTrailersNETDownloader
             string userAgentString = ManageUserAgent(upperDownloadUrl);
 
 
+            if (upperDownloadUrl.IndexOf("youtube", StringComparison.CurrentCultureIgnoreCase) >= 0)
+            {
+                log.WriteLine("YouTube Trailers Download ...");
+                YouTubeDownload(downloadURL, fName, dirName, qualPref);
+                return true;
+            }
             fName = MakeFileName(upperDownloadUrl, fName, dirName, qualPref);
             log.VerboseWrite("Filename : " + fName);
-//            if (upperDownloadUrl.Contains("YOUTUBE"))
-//            {
-//                log.WriteLine("YouTube Trailers not supported at the moment. Skipping ...");
-//                return false;
-//            }
             FullFileName = dirName + pathsep + fName;
 // Check length of filename. MAX_PATH set to 260. Need to subtract 4 since .tmp will be added to filename
             if (FullFileName.Length > MAX_PATH - 4)
@@ -1121,6 +1252,7 @@ namespace HDTrailersNETDownloader
                     writer.Close();
 
                     log.VerboseWrite("Serialization complete.");
+                    exclusions.Clear();
                 }
             }
             catch (Exception e)
@@ -1261,31 +1393,21 @@ namespace HDTrailersNETDownloader
 
         static void DisplayHelp()
         {
-            Console.WriteLine ("Usage: greet [OPTIONS]+ message");
+            Console.WriteLine("This option outputs the command line help");
             Console.WriteLine ("Greet a list of individuals with an optional message.");
             Console.WriteLine ("If no message is specified, a generic greeting is used.");
             Console.WriteLine ();
-            Console.WriteLine ("Options:");
-            Process pr = new Process(); 
-            pr.StartInfo.FileName = "Notepad.exe"; 
-            pr.StartInfo.Arguments = "C:\\Users\\Ian\\AppData\\Local\\HD-Trailers.Net Downloader\\HD-Trailers.Net Downloader.config"; 
-            pr.Start();
-            while (pr.HasExited == false)
-            {
-                if ((DateTime.Now.Second % 5) == 0)
-                { 
-                }
-                System.Threading.Thread.Sleep(1000);
-            }            
+            Console.WriteLine ("Options:    e|edit   Edit config file");
+            Console.WriteLine ("            i|ini=   Specify config file");
+            Console.WriteLine ("            ?|h|Jelp Bring up command line options");
+            Console.ReadLine(); 
             Environment.Exit(0); 
         }
         static void EditConfigFile()
         {
-            Console.WriteLine("Usage: greet [OPTIONS]+ message");
-            Console.WriteLine("Greet a list of individuals with an optional message.");
-            Console.WriteLine("If no message is specified, a generic greeting is used.");
+            Console.WriteLine("This option brings up the config file in notpad so that it can be edited");
             Console.WriteLine();
-            Console.WriteLine("Options:");
+            Console.WriteLine("Options:  -e");
             Process pr = new Process();
             pr.StartInfo.FileName = "Notepad.exe";
             pr.StartInfo.Arguments = "C:\\Users\\Ian\\AppData\\Local\\HD-Trailers.Net Downloader\\HD-Trailers.Net Downloader.config";

@@ -57,7 +57,7 @@ namespace IMDb_Scraper
         public string ImdbURL { get; set; }
 
         //Search Engine URLs
-        private string GoogleSearch = "http://www.google.com/search?q=imdb+";
+        private string GoogleSearch = "http://www.google.com/search?q=site:imdb.com+";
         private string BingSearch = "http://www.bing.com/search?q=imdb+";
         private string AskSearch = "http://www.ask.com/web?q=imdb+";
 
@@ -89,20 +89,70 @@ namespace IMDb_Scraper
 //            if (searchEngine.ToLower().Equals("ask")) url = AskSearch + MovieName;
 
 //            string url = GoogleSearch + System.Uri.EscapeUriString(MovieName) + System.Uri.EscapeUriString(" and (" + thisyearstr + " or " + lastyearstr + ")");  //default to Google search
-           url = GoogleSearch + MovieName + " (" + thisyearstr + " or " + lastyearstr + ")";
+            url = GoogleSearch + " " +System.Web.HttpUtility.UrlEncode(MovieName) + " " + " IMDb (" + thisyearstr + " or " + lastyearstr + ")";
            if (searchEngine.ToLower().Equals("bing")) url = BingSearch + MovieName + " (" + thisyearstr + " or " + lastyearstr + ")";
            if (searchEngine.ToLower().Equals("ask")) url = AskSearch + MovieName + " (" + thisyearstr + " or " + lastyearstr + ")";
             string html = getUrlData(url);
-            ArrayList imdbUrls = matchAll(@"<a href=""(http://www.imdb.com/title/tt\d{7}/)"".*?>.*?</a>", html);
+//            ArrayList imdbUrls = matchAll(@"<a href=""(http://www.imdb.com/title/tt\d{7}/)"".*?>.*?</a>", html);
+
+            ArrayList imdbUrls = GetImdbLinks(html);
 
             if (imdbUrls.Count > 0)
-                return (string)imdbUrls[0]; //return first IMDb result
-            else if (searchEngine.ToLower().Equals("google")) //if Google search fails
+            {
+                string tmpstr = (string)imdbUrls[0];
+                tmpstr = tmpstr.Substring(0, NthIndexOf(tmpstr,"/", 5)+1);
+                return tmpstr; //return first IMDb result
+            }
+            else if (searchEngine.ToLower().Equals("google"))
+            {
+                //if Google search fails
                 return getIMDbUrl(MovieName, "bing"); //search using Bing
-            else if (searchEngine.ToLower().Equals("bing")) //if Bing search fails
+            }
+            else if (searchEngine.ToLower().Equals("bing"))
+            {
+                //if Bing search fails
                 return getIMDbUrl(MovieName, "ask"); //search using Ask
-            else //search fails
+            }
+            else
+            {
+                //search fails
                 return string.Empty;
+            }
+        }
+        public ArrayList FindImdbMovieEntries(ArrayList inlist)
+        {
+            ArrayList outlist = new ArrayList();
+            foreach (string s in inlist)
+            {
+                if (s.Contains("/title/tt"))
+                {
+                    outlist.Add(s);
+                }
+            }
+            return (outlist);
+        }
+        public ArrayList GetImdbLinks(string message)
+        {
+            ArrayList list = new ArrayList();
+            ArrayList list2 = new ArrayList();
+            Regex urlRx = new Regex(@"((https?|ftp|file)\://|www.)[A-Za-z0-9\.\-]+(/[A-Za-z0-9\?\&\=;\+!'\(\)\*\-\._~%]*)*", RegexOptions.IgnoreCase);
+
+            MatchCollection matches = urlRx.Matches(message);
+            foreach (Match match in matches)
+            {
+                list.Add(match.Value);
+            }
+            list2 = FindImdbMovieEntries(list);
+            return list2;
+        }
+        public static int NthIndexOf(string target, string value, int n)
+        {
+            Match m = Regex.Match(target, "((" + value + ").*?){" + n + "}");
+
+            if (m.Success)
+                return m.Groups[2].Captures[n - 1].Index;
+            else
+                return -1;
         }
         public bool ImdbLookup(string MovieName, bool GetExtraInfo = true)
         {
@@ -134,8 +184,12 @@ namespace IMDb_Scraper
             if (!string.IsNullOrEmpty(Id))
             {
                 status = true;
+
                 Title = match(@"<title>(IMDb \- )*(.*?) \(.*?</title>", html, 2);
-                OriginalTitle = match(@"title-extra"">(.*?)<", html);
+                Title = System.Web.HttpUtility.HtmlDecode(Title);
+                Title = System.Web.HttpUtility.HtmlDecode(Title);
+                OriginalTitle = System.Web.HttpUtility.HtmlDecode(match(@"title-extra"">(.*?)<", html));
+                OriginalTitle = System.Web.HttpUtility.HtmlDecode(OriginalTitle);
                 istart = html.IndexOf("<title>");
                 iend = html.IndexOf("</title>")+ 8;
                 substr1 = html.Substring(istart, iend-istart);
@@ -150,7 +204,10 @@ namespace IMDb_Scraper
                 Cinematographers = matchAll(@"<td valign=""top""><a.*?href=""/name/.*?/"">(.*?)</a>", match(@"Cinematography by</a></h5>(.*?)</table>", html));
                 Editors = matchAll(@"<td valign=""top""><a.*?href=""/name/.*?/"">(.*?)</a>", match(@"Film Editing by</a></h5>(.*?)</table>", html));
                 Cast = matchAll(@"<td class=""nm""><a.*?href=""/name/.*?/"".*?>(.*?)</a>", match(@"<h3>Cast</h3>(.*?)</table>", html));
-                Plot = match(@"Plot:</h5>.*?<div class=""info-content"">(.*?)(<a|</div)", html);
+                Plot = System.Web.HttpUtility.HtmlDecode(match(@"Plot:</h5>.*?<div class=""info-content"">(.*?)(<a|</div)", html));
+                Plot = System.Web.HttpUtility.HtmlDecode(Plot);
+                Plot = Plot.Replace("|", "");
+                Plot = Plot.Trim();
                 PlotKeywords = matchAll(@"<a.*?>(.*?)</a>", match(@"Plot Keywords:</h5>.*?<div class=""info-content"">(.*?)</div", html));
                 ReleaseDate = match(@"Release Date:</h5>.*?<div class=""info-content"">.*?(\d{1,2} (January|February|March|April|May|June|July|August|September|October|November|December) (19|20)\d{2})", html);
                 Runtime = match(@"Runtime:</h5><div class=""info-content"">(\d{1,4}) min[\s]*.*?</div>", html);
@@ -159,7 +216,8 @@ namespace IMDb_Scraper
                 if (string.IsNullOrEmpty(Oscars) && "Won Oscar.".Equals(match(@"(Won Oscar\.)", html))) Oscars = "1";
                 Awards = match(@"(\d{1,4}) wins", html);
                 Nominations = match(@"(\d{1,4}) nominations", html);
-                Tagline = match(@"Tagline:</h5>.*?<div class=""info-content"">(.*?)(<a|</div)", html);
+                Tagline = System.Web.HttpUtility.HtmlDecode(match(@"Tagline:</h5>.*?<div class=""info-content"">(.*?)(<a|</div)", html));
+                Tagline = System.Web.HttpUtility.HtmlDecode(Tagline);
                 MpaaRating = match(@"MPAA</a>:</h5><div class=""info-content"">Rated (G|PG|PG-13|PG-14|R|NC-17|X) ", html);
                 if (MpaaRating.Length == 0)
                 {

@@ -28,6 +28,7 @@ namespace HDTrailersNETDownloader
         public int KeepFor { get; private set; }
         public bool DeleteToRecycleBin { get; private set; }
         public bool GrabPoster { get; private set; }
+        public bool UseMovieNameforPoster { get; private set; }
         public bool XBMCFilenames { get; private set; }
         public bool PlexFilenames { get; private set; }
         public string IfIMDBMissingMPAARatingUse { get; private set; }
@@ -49,6 +50,7 @@ namespace HDTrailersNETDownloader
         public string SMTPServer { get; private set; }
         public int SMTPPort { get; private set; }
         public bool UseDefaultCredentials { get; private set; }
+        public bool SMTPEnableSsl { get; private set; }
         public string SMTPUsername { get; private set; }
         public string SMTPPassword { get; private set; }
         public string EmailReturnAddress { get; private set; }
@@ -188,6 +190,7 @@ namespace HDTrailersNETDownloader
                 this.Metadata3DDownloadFolder = Trailer3DDownloadFolder;
             }
             this.GrabPoster = GetBooleanFromAppsettings(appSetting, "GrabPoster", "true");
+            this.UseMovieNameforPoster = GetBooleanFromAppsettings(appSetting, "UseMovieNameforPoster", "false");
             this.XBMCFilenames = GetBooleanFromAppsettings(appSetting, "XBMCFileNames", "false");
             this.PlexFilenames = GetBooleanFromAppsettings(appSetting, "PlexFileNames", "false");
             this.CreateXBMCNfoFile = GetBooleanFromAppsettings(appSetting, "CreateXBMCNfoFile", "true");
@@ -219,6 +222,7 @@ namespace HDTrailersNETDownloader
             this.SMTPServer = GetStringFromAppsettings(appSetting, "SMTPServer", "");
             this.SMTPPort = GetInt32FromAppsettings(appSetting, "SMTPPort", "25");
             this.UseDefaultCredentials = GetBooleanFromAppsettings(appSetting, "UseDefaultCredentials", "true");
+            this.SMTPEnableSsl = GetBooleanFromAppsettings(appSetting, "SMTPEnableSsl", "false");
             this.SMTPUsername = GetStringFromAppsettings(appSetting, "SMTPUsername", "");
             this.SMTPPassword = GetStringFromAppsettings(appSetting, "SMTPPassword", "");
             this.EmailReturnAddress = GetStringFromAppsettings(appSetting, "EmailReturnAddress", "");
@@ -295,6 +299,7 @@ namespace HDTrailersNETDownloader
                 sb.AppendFormat("{0}: {1}\n", "SMTPUsername", "*********");
                 sb.AppendFormat("{0}: {1}\n", "SMTPPassword", "*********");
             }
+            sb.AppendFormat("{0}: {1}\n", "SMTPEnableSsl", SMTPEnableSsl.ToString());
             sb.AppendFormat("{0}: {1}\n", "EmailReturnAddress", EmailReturnAddress.ToString());
             sb.AppendFormat("{0}: {1}\n", "EmailReturnDisplayName", EmailReturnDisplayName.ToString());
 

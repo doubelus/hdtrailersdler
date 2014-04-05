@@ -14,7 +14,7 @@ namespace HDTrailersNETDownloader
         public hdTrailersNetWeb()
         {
             validurls = new List<string>();
-            validurls.Add("http://www.hd-trailers.net");
+            validurls.Add("http://www.hd-trailers.net/");
             validurls.Add("http://www.hd-trailers.net/Page/1/");
             validurls.Add("http://www.hd-trailers.net/TopMovies/");
             validurls.Add("http://www.hd-trailers.net/OpeningThisWeek/");

@@ -89,9 +89,9 @@ namespace IMDb_Scraper
 //            if (searchEngine.ToLower().Equals("ask")) url = AskSearch + MovieName;
 
 //            string url = GoogleSearch + System.Uri.EscapeUriString(MovieName) + System.Uri.EscapeUriString(" and (" + thisyearstr + " or " + lastyearstr + ")");  //default to Google search
-            url = GoogleSearch + " " +System.Web.HttpUtility.UrlEncode(MovieName) + " " + " IMDb (" + thisyearstr + " or " + lastyearstr + ")";
-           if (searchEngine.ToLower().Equals("bing")) url = BingSearch + MovieName + " (" + thisyearstr + " or " + lastyearstr + ")";
-           if (searchEngine.ToLower().Equals("ask")) url = AskSearch + MovieName + " (" + thisyearstr + " or " + lastyearstr + ")";
+            url = GoogleSearch + " " +System.Web.HttpUtility.UrlEncode(MovieName) + " IMDb (" + thisyearstr + " or " + lastyearstr + ")";
+            if (searchEngine.ToLower().Equals("bing")) url = BingSearch + MovieName + " (" + thisyearstr + " or " + lastyearstr + ")";
+            if (searchEngine.ToLower().Equals("ask")) url = AskSearch + MovieName + "(" + thisyearstr + " or " + lastyearstr + ")";
             string html = getUrlData(url);
 //            ArrayList imdbUrls = matchAll(@"<a href=""(http://www.imdb.com/title/tt\d{7}/)"".*?>.*?</a>", html);
 
@@ -168,23 +168,22 @@ namespace IMDb_Scraper
             if (!string.IsNullOrEmpty(imdburl))
             {
 //                string html = getUrlData(imdburl);
-                parseIMDbPage(imdburl, GetExtraInfo);
-                return true;
+//                parseIMDbPage(imdburl, GetExtraInfo);
+                return parseIMDbPage(imdburl, GetExtraInfo);
             }
             return false;
         }
 
         //Parse IMDb page data
-        private void parseIMDbPage(string imdbUrl, bool GetExtraInfo)
+        private bool parseIMDbPage(string imdbUrl, bool GetExtraInfo)
         {
             int istart, iend;
             string substr1;
             string html = getUrlData(imdbUrl+"combined");
-            Id = match(@"<link rel=""canonical"" href=""http://www.imdb.com/title/(tt\d{7})/combined"" />", html);
-            if (!string.IsNullOrEmpty(Id))
+            if (!string.IsNullOrEmpty(html))
             {
                 status = true;
-
+                Id = match(@"<link rel=""canonical"" href=""http://www.imdb.com/title/(tt\d{7})/combined"" />", html);
                 Title = match(@"<title>(IMDb \- )*(.*?) \(.*?</title>", html, 2);
                 Title = System.Web.HttpUtility.HtmlDecode(Title);
                 Title = System.Web.HttpUtility.HtmlDecode(Title);
@@ -249,8 +248,11 @@ namespace IMDb_Scraper
                     MediaImages = getMediaImages();
                     RecommendedTitles = getRecommendedTitles();
                 }
+                return true;
+            } else {
+                Id = null;
+                return false;
             }
-
         }
 
         //Get all release dates
@@ -323,18 +325,28 @@ namespace IMDb_Scraper
         //Get URL Data
         private string getUrlData(string url)
         {
-            WebClient client = new WebClient();
-            Random r = new Random();
-            //Random IP Address
-            client.Headers["X-Forwarded-For"] = r.Next(0, 255) + "." + r.Next(0, 255) + "." + r.Next(0, 255) + "." + r.Next(0, 255);
-            //Random User-Agent
-            client.Headers["User-Agent"] = "Mozilla/" + r.Next(3, 5) + ".0 (Windows NT " + r.Next(3, 5) + "." + r.Next(0, 2) + "; rv:2.0.1) Gecko/20100101 Firefox/" + r.Next(3, 5) + "." + r.Next(0, 5) + "." + r.Next(0, 5);
-            Stream datastream = client.OpenRead(url);
-            StreamReader reader = new StreamReader(datastream);
-            StringBuilder sb = new StringBuilder();
-            while (!reader.EndOfStream)
-                sb.Append(reader.ReadLine());
-            return sb.ToString();
+            try
+            {
+                WebClient client = new WebClient();
+                Random r = new Random();
+                //Random IP Address
+                client.Headers["X-Forwarded-For"] = r.Next(0, 255) + "." + r.Next(0, 255) + "." + r.Next(0, 255) + "." + r.Next(0, 255);
+                //Random User-Agent
+                client.Headers["User-Agent"] = "Mozilla/" + r.Next(3, 5) + ".0 (Windows NT " + r.Next(3, 5) + "." + r.Next(0, 2) + "; rv:2.0.1) Gecko/20100101 Firefox/" + r.Next(3, 5) + "." + r.Next(0, 5) + "." + r.Next(0, 5);
+                Stream datastream = client.OpenRead(url);
+                StreamReader reader = new StreamReader(datastream);
+                StringBuilder sb = new StringBuilder();
+                while (!reader.EndOfStream)
+                    sb.Append(reader.ReadLine());
+                return sb.ToString();
+            }
+            catch (Exception e)
+            {
+//                log.WriteLine("1. Unhandled Exception....");
+//                log.WriteLine("Exception: " + e.Message);
+                return "";
+            }
+
         }
         // isGenre
         public bool isGenre(string gen)

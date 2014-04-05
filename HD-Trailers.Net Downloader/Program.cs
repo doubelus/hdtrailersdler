@@ -17,11 +17,18 @@ using IMDb_Scraper;
 using Nfo.Movie;
 using Nfo.File;
 using YoutubeExtractor;
+using System.Runtime.InteropServices;
 
 namespace HDTrailersNETDownloader
 {
     class Program
     {
+        [DllImport("user32.dll")]
+        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
         static Config config = new Config();
         static public Logging log = new Logging();
         static ArrayList Exclusions = new ArrayList();
@@ -38,11 +45,13 @@ namespace HDTrailersNETDownloader
 
         static string pathsep = Path.DirectorySeparatorChar.ToString();
         static string MailBody;
+        static bool hideconsolewindow = false; 
 //        static List<string> extra; 
-        static string Version = "HD-Trailers.Net Downloader v2.2.4";
+        static string Version = "HD-Trailers.Net Downloader v2.3.0";
         static int NewTrailerCount = 0;
         [PreEmptive.Attributes.Setup(CustomEndpoint = "so-s.info/PreEmptive.Web.Services.Messaging/MessagingServiceV2.asmx")]
         [PreEmptive.Attributes.Teardown()]
+        [STAThread()]
         static void Main(string[] args)
         {
             bool help = false;
@@ -50,10 +59,11 @@ namespace HDTrailersNETDownloader
             var options = new OptionSet() 
                 .Add("e|edit", e => EditConfigFile())
                 .Add ("i|ini=",   delegate (string v) { names.Add (v); })
-                .Add("?|h|help", h => DisplayHelp());
+                .Add("?|help", h => DisplayHelp())
+                .Add("h|hide", h => HideConsoleWindow());
                 
             options.Parse(args);
-
+            Console.Title = Version;
             try
             {
                 if(help) {
@@ -203,7 +213,7 @@ namespace HDTrailersNETDownloader
                     log.WriteLine("+                                                       +");
                     log.WriteLine("+-------------------------------------------------------+");
                 }
-                if (config.PauseWhenDone)
+                if (!hideconsolewindow && config.PauseWhenDone)
                     Console.ReadLine();
             }
             catch (Exception e)
@@ -455,28 +465,37 @@ namespace HDTrailersNETDownloader
                 (config.IncludeGenres.IndexOf("all", StringComparison.OrdinalIgnoreCase) == -1) ||
                 (config.ExcludeGenres.IndexOf("none", StringComparison.OrdinalIgnoreCase) == -1) ||
                 (config.IncludeLanguages.IndexOf("all", StringComparison.OrdinalIgnoreCase) == -1) ||
-                config.CreateXBMCNfoFile)
+                (config.CreateXBMCNfoFile) ||
+                (config.PlexFilenames))
             {
                 log.WriteLine("Looking up MovieName on IMDB");
                 if ((link.imdbId != null) && (link.imdbId.Length > 0))
                 {
-                    imdb.ImdbLookup(link.imdbId);
+                    if(imdb.ImdbLookup(link.imdbId)) {
+                        log.WriteLine("IMDB page was located");
+                    } else {
+                        log.WriteLine("IMDB page was not found");
+                    }
                 }
                 else
                 {
-                     imdb.ImdbLookup(MovieName);
+                    //imdb.ImdbLookup("300: Rise of an Empire");
+                    if(imdb.ImdbLookup(MovieName)) {
+                        log.WriteLine("IMDB page was located");
+                    } else {
+                        log.WriteLine("IMDB page was not found");
+                    }
                 }
             }
             if (config.PlexFilenames)
             {
-                if (imdb.Year.Length == 0)
-                {
-                    DateTime thisyear = DateTime.Now;
-                    fname = MovieName + " (" + thisyear.Year.ToString() + ")";
-                }
-                else
+                if(imdb.Id != null) 
                 {
                     fname = MovieName + " (" + imdb.Year + ")";
+                } else {
+                    log.WriteLine("IMDB page not loaded. Using current year for Release date");
+                    DateTime thisyear = DateTime.Now;
+                    fname = MovieName + " (" + thisyear.Year.ToString() + ")";
                 }
             }
 //           else
@@ -564,19 +583,39 @@ namespace HDTrailersNETDownloader
             if ((config.IncludeGenres.Length != 0) &&
                 (config.IncludeGenres.IndexOf("all", StringComparison.OrdinalIgnoreCase) == -1))
             {
-                if (!imdb.isGenre(config.IncludeGenres))
+                if (imdb.Id != null)
                 {
-                    log.WriteLine("Trailer Genre not in include list. Skipping...");
-                    AddToEmailSummary(title + ": Trailer Genre not in include list. Skipping...");
+                    if (!imdb.isGenre(config.IncludeGenres))
+                    {
+                        log.WriteLine("Trailer Genre not in include list. Skipping...");
+                        AddToEmailSummary(title + ": Trailer Genre not in include list. Skipping...");
+                        return;
+                    }
+                }
+                else
+                {
+                    log.WriteLine("IMDB page not found so genre is unknown");
+                    log.WriteLine("Trailer genre is not in include list. Skipping...");
+                    AddToEmailSummary(title + ": Trailer genre is not in include list. Skipping...");
                     return;
                 }
             }
             if ((config.ExcludeGenres.Length != 0) &&
                 (config.ExcludeGenres.IndexOf("none", StringComparison.OrdinalIgnoreCase) == -1))
             {
-                if (imdb.isGenre(config.ExcludeGenres))
+                if (imdb.Id != null)
                 {
-                    log.WriteLine("Trailer Genre is in the exclude list. Skipping...");
+                    if (imdb.isGenre(config.ExcludeGenres))
+                    {
+                        log.WriteLine("Trailer Genre is in the exclude list. Skipping...");
+                        AddToEmailSummary(title + ": Trailer Genre is in the exclude list. Skipping...");
+                        return;
+                    }
+                }
+                else
+                {
+                    log.WriteLine("IMDB page not found so genre is unknown");
+                    log.WriteLine("Trailer genre is in  the exclude list. Skipping...");
                     AddToEmailSummary(title + ": Trailer Genre is in the exclude list. Skipping...");
                     return;
                 }
@@ -585,13 +624,22 @@ namespace HDTrailersNETDownloader
             if ((config.IncludeLanguages.Length != 0) &&
                 (config.IncludeLanguages.IndexOf("all", StringComparison.OrdinalIgnoreCase) == -1))
             {
-                if (!imdb.isLanguage(config.IncludeLanguages))
+                if (imdb.Id != null)
                 {
+                    if (!imdb.isLanguage(config.IncludeLanguages))
+                    {
+                        log.WriteLine("Trailer language is not in include list. Skipping...");
+                        AddToEmailSummary(title + ": Trailer language is not in include list. Skipping...");
+                        return;
+                    }
+                }
+                else
+                {
+                    log.WriteLine("IMDB page not found so language is unknown");
                     log.WriteLine("Trailer language is not in include list. Skipping...");
                     AddToEmailSummary(title + ": Trailer language is not in include list. Skipping...");
                     return;
                 }
-
             }
 
             bool tempBool;
@@ -784,7 +832,7 @@ namespace HDTrailersNETDownloader
                 }
 
                 tempString = StringFunctions.subStrBetween(tempStringArray[0], "title=\"", "0p\">");
-                title = tempString.Remove(tempString.Length - 5, 5);
+//                title = tempString.Remove(tempString.Length - 5, 5);
                 tempString = StringFunctions.subStrBetween(tempStringArray[0], "- ", " -");
 
                 // now find the poster url
@@ -906,36 +954,47 @@ namespace HDTrailersNETDownloader
 
         static bool YouTubeDownload(string downloadURL, string fName, string dirName, string qualPref)
         {
-            IEnumerable<VideoInfo> videoInfos = DownloadUrlResolver.GetDownloadUrls(downloadURL);
-            /*
-             * Select the first .mp4 video with 360p resolution
-             */
-            VideoInfo video = videoInfos
-                .First(info => info.VideoType == VideoType.Mp4 && info.Resolution == 720);
-
-            /*
-             * Create the video downloader.
-             * The first argument is the video to download.
-             * The second argument is the path to save the video file.
-             */
-            fName = MakeFileName(downloadURL, fName, dirName, qualPref);
-            log.VerboseWrite("Filename : " + fName);
-            if (File.Exists(Path.Combine(dirName, fName + video.VideoExtension)))
+            try
             {
-                log.VerboseWrite("Deleting an existing file fragment prior to download");
-                File.Delete(Path.Combine(dirName, fName + video.VideoExtension));
+                IEnumerable<VideoInfo> videoInfos = DownloadUrlResolver.GetDownloadUrls(downloadURL);
+                /*
+                 * Select the first .mp4 video with 360p resolution
+                 */
+                VideoInfo video = videoInfos
+                    .First(info => info.VideoType == VideoType.Mp4 && info.Resolution == 720);
+
+                /*
+                 * Create the video downloader.
+                 * The first argument is the video to download.
+                 * The second argument is the path to save the video file.
+                */
+                fName = MakeFileName(downloadURL, fName, dirName, qualPref);
+                log.VerboseWrite("Filename : " + fName);
+                if (File.Exists(Path.Combine(dirName, fName + video.VideoExtension)))
+                {
+                    log.VerboseWrite("Deleting an existing file fragment prior to download");
+                    File.Delete(Path.Combine(dirName, fName + video.VideoExtension));
+                }
+                var videoDownloader = new VideoDownloader(video, Path.Combine(dirName, fName + video.VideoExtension));
+
+                // Register the ProgressChanged event and print the current progress
+                videoDownloader.DownloadProgressChanged += (sender, args) => log.ConsoleWrite("Downloaded - " + String.Format(CultureInfo.InvariantCulture, 
+                   "{0:0.00}", args.ProgressPercentage) + "%\r");
+
+                /*
+                 * Execute the video downloader.
+                 * For GUI applications note, that this method runs synchronously.
+                 */
+                videoDownloader.Execute();
+                return true;
             }
-            var videoDownloader = new VideoDownloader(video, Path.Combine(dirName, fName + video.VideoExtension));
-
-            // Register the ProgressChanged event and print the current progress
-            videoDownloader.DownloadProgressChanged += (sender, args) => log.ConsoleWrite("Downloaded - " + args.ProgressPercentage + "%\r");
-
-            /*
-             * Execute the video downloader.
-             * For GUI applications note, that this method runs synchronously.
-             */
-            videoDownloader.Execute();
-            return true;
+            catch (Exception e)
+            {
+                log.WriteLine("ERROR: Problem with youtubeDownloader");
+                log.WriteLine(e.ToString());
+                AddToEmailSummary("ERROR: Problem with youtubeDownloader");
+                return false;
+            }
         }
         static bool GetOrResumeTrailer(string downloadURL, string fName, string dirName, string qualPref, string posterUrl)
         {
@@ -954,8 +1013,7 @@ namespace HDTrailersNETDownloader
             if (upperDownloadUrl.IndexOf("youtube", StringComparison.CurrentCultureIgnoreCase) >= 0)
             {
                 log.WriteLine("YouTube Trailers Download ...");
-                YouTubeDownload(downloadURL, fName, dirName, qualPref);
-                return true;
+                return YouTubeDownload(downloadURL, fName, dirName, qualPref); ;
             }
             fName = MakeFileName(upperDownloadUrl, fName, dirName, qualPref);
             log.VerboseWrite("Filename : " + fName);
@@ -1135,17 +1193,16 @@ namespace HDTrailersNETDownloader
             try
             {
                 String fname;
+                fname = Path.ChangeExtension(filename, "jpg");
                 if (config.CreateFolder)
                 {
-                    fname = downloadPath + pathsep + @"folder.jpg";
+                    if (!config.UseMovieNameforPoster)
+                    {
+                        fname = "folder.jpg";
+                    }
                 }
-                else
-                {
-                    //fname = BuildFileName(filename, downloadPath, "jpg");
-                    fname = Path.ChangeExtension(filename, "jpg");
-                    fname = downloadPath + pathsep + fname;
-                    //                string fname = downloadPath + pathsep + filename;
-                }
+                fname = downloadPath + pathsep + fname;
+
                 if ((source == null) || (source.Length == 0))
                 {
                     log.VerboseWrite("No poster url found. Skipping....");
@@ -1299,6 +1356,10 @@ namespace HDTrailersNETDownloader
                         smtpClient.Credentials = CredentialCache.DefaultNetworkCredentials;
                     }
                     smtpClient.Send(mailMsg);
+                    if (config.SMTPEnableSsl)
+                    {
+                        smtpClient.EnableSsl = true;
+                    }
                     log.VerboseWrite("Email summary sent.");
                 }
             }
@@ -1308,7 +1369,28 @@ namespace HDTrailersNETDownloader
                 log.WriteLine("Exception: " + e.Message);
             }
         }
+        static void HideConsoleWindow()
+        {
+            setConsoleWindowVisibility(false, Console.Title);
+            hideconsolewindow = true;
+        }
 
+        public static void setConsoleWindowVisibility(bool visible, string title)
+        {
+            // below is Brandon's code            
+            //Sometimes System.Windows.Forms.Application.ExecutablePath works for the caption depending on the system you are running under.           
+            IntPtr hWnd = FindWindow(null, title);
+
+            if (hWnd != IntPtr.Zero)
+            {
+                if (!visible)
+                    //Hide the window                    
+                    ShowWindow(hWnd, 0); // 0 = SW_HIDE               
+                else
+                    //Show window again                    
+                    ShowWindow(hWnd, 1); //1 = SW_SHOWNORMA           
+            }
+        }
         static void RunEXE()
         {
             try
@@ -1399,7 +1481,8 @@ namespace HDTrailersNETDownloader
             Console.WriteLine ();
             Console.WriteLine ("Options:    e|edit   Edit config file");
             Console.WriteLine ("            i|ini=   Specify config file");
-            Console.WriteLine ("            ?|h|Jelp Bring up command line options");
+            Console.WriteLine ("            h|hide   Hide console window");
+            Console.WriteLine ("            ?|help   Bring up command line options");
             Console.ReadLine(); 
             Environment.Exit(0); 
         }

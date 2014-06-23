@@ -41,7 +41,11 @@ Source: "PreEmptive.Attributes.dll"; DestDir: {app};  Flags: ignoreversion
 Source: "ReadMe.txt"; DestDir: {app}; Flags: ignoreversion 
 Source: "RssReader.dll"; DestDir: {app};  Flags: ignoreversion
 Source: "SimpleConfigEditor.dll"; DestDir: {app};  Flags: ignoreversion
+Source: "YoutubeExtractor.dll"; DestDir: {app};  Flags: ignoreversion
+Source: "YoutubeExtractor.xml"; DestDir: {app};  Flags: ignoreversion
 Source: "HD-Trailers.Net Downloader.config"; DestDir: {localappdata}\HD-Trailers.Net Downloader;  Flags: confirmoverwrite
+Source: "HD-Trailers.Net Downloader Original.config"; DestDir: {localappdata}\HD-Trailers.Net Downloader;  Flags: confirmoverwrite
+Source: "HD-Trailers.Net Downloader - 3D Trailers.config"; DestDir: {localappdata}\HD-Trailers.Net Downloader;  Flags: confirmoverwrite
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -51,3 +55,75 @@ Name: "{group}\{#MyAppName} Config File"; Filename: "{win}\notepad.exe"; Paramet
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, "&", "&&")}}"; Flags: nowait postinstall skipifsilent
+
+[code]
+function IsDotNetDetected(version: string; service: cardinal): boolean;
+// Indicates whether the specified version and service pack of the .NET Framework is installed.
+//
+// version -- Specify one of these strings for the required .NET Framework version:
+//    'v1.1.4322'     .NET Framework 1.1
+//    'v2.0.50727'    .NET Framework 2.0
+//    'v3.0'          .NET Framework 3.0
+//    'v3.5'          .NET Framework 3.5
+//    'v4\Client'     .NET Framework 4.0 Client Profile
+//    'v4\Full'       .NET Framework 4.0 Full Installation
+//    'v4.5'          .NET Framework 4.5
+//    'v4.5.1'        .NET Framework 4.5.1
+//
+// service -- Specify any non-negative integer for the required service pack level:
+//    0               No service packs required
+//    1, 2, etc.      Service pack 1, 2, etc. required
+var
+    key: string;
+    install, release, serviceCount: cardinal;
+    check45, success: boolean;
+var reqNetVer : string;
+begin
+    // .NET 4.5 installs as update to .NET 4.0 Full
+    if version = 'v4.5' then begin
+        version := 'v4\Full';
+        check45 := true;
+    end else
+        check45 := false;
+
+    // installation key group for all .NET versions
+    key := 'SOFTWARE\Microsoft\NET Framework Setup\NDP\' + version;
+
+    // .NET 3.0 uses value InstallSuccess in subkey Setup
+    if Pos('v3.0', version) = 1 then begin
+        success := RegQueryDWordValue(HKLM, key + '\Setup', 'InstallSuccess', install);
+    end else begin
+        success := RegQueryDWordValue(HKLM, key, 'Install', install);
+    end;
+
+    // .NET 4.0/4.5 uses value Servicing instead of SP
+    if Pos('v4', version) = 1 then begin
+        success := success and RegQueryDWordValue(HKLM, key, 'Servicing', serviceCount);
+    end else begin
+        success := success and RegQueryDWordValue(HKLM, key, 'SP', serviceCount);
+    end;
+
+    // .NET 4.5 uses additional value Release
+    if check45 then begin
+        success := success and RegQueryDWordValue(HKLM, key, 'Release', release);
+        success := success and (release >= 378389);
+    end;
+
+    result := success and (install = 1) and (serviceCount >= service);
+end;
+
+function IsRequiredDotNetDetected(): Boolean;  
+begin
+    result := IsDotNetDetected('v4\Full', 0);
+end;
+
+function InitializeSetup(): Boolean;
+begin
+    if not IsDotNetDetected('v4\Full', 0) then begin
+        MsgBox('{#MyAppName} requires Microsoft .NET Framework 4.5.'#13#13
+          'The installer will attempt to install it', mbInformation, MB_OK);        
+    end
+    
+    result := true;
+end;
+

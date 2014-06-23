@@ -54,20 +54,22 @@ G:\test6\HD-Trailers.Net Downloader\obj\Release\ResolveAssemblyReference.cache
 G:\test6\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
 G:\test6\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
 G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.config
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.manifest
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.application
 G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe
 G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.pdb
 G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\PreEmptive.Attributes.dll
-G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
-G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\RestSharp.dll
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\TMDbLib.dll
 G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\YoutubeExtractor.dll
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\RestSharp.xml
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\TMDbLib.pdb
 G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\YoutubeExtractor.xml
-G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.exe.manifest
-G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\HD-Trailers.Net Downloader.application
+G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.csprojResolveAssemblyReference.cache
 G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.TrustInfo.xml
 G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe.manifest
 G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.application
-G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\RestSharp.dll
-G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\TMDbLib.dll
-G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\RestSharp.xml
-G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\TMDbLib.pdb
-G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.csprojResolveAssemblyReference.cache
+G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.exe
+G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\Newtonsoft.Json.dll
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\Newtonsoft.Json.xml

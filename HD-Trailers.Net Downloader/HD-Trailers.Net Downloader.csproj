@@ -84,6 +84,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="PreEmptive.Attributes">
       <HintPath>Properties\PreEmptive.Attributes.dll</HintPath>
     </Reference>
@@ -113,12 +116,13 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="TMDbLib">
-      <HintPath>..\packages\TMDbLib.0.7.6\lib\net40\TMDbLib.dll</HintPath>
-    </Reference>
-    <Reference Include="YoutubeExtractor, Version=0.8.1.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="TMDbLib, Version=0.7.7.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\YoutubeExtractor.0.8.1\lib\net35\YoutubeExtractor.dll</HintPath>
+      <HintPath>..\packages\TMDbLib.0.7.7\lib\net40\TMDbLib.dll</HintPath>
+    </Reference>
+    <Reference Include="YoutubeExtractor, Version=0.10.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\YoutubeExtractor.0.10.1\lib\net35\YoutubeExtractor.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

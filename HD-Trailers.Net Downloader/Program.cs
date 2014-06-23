@@ -47,7 +47,7 @@ namespace HDTrailersNETDownloader
         static string MailBody;
         static bool hideconsolewindow = false; 
 //        static List<string> extra; 
-        static string Version = "HD-Trailers.Net Downloader v2.3.0";
+        static string Version = "HD-Trailers.Net Downloader v2.3.6";
         static int NewTrailerCount = 0;
         [PreEmptive.Attributes.Setup(CustomEndpoint = "so-s.info/PreEmptive.Web.Services.Messaging/MessagingServiceV2.asmx")]
         [PreEmptive.Attributes.Teardown()]
@@ -71,11 +71,10 @@ namespace HDTrailersNETDownloader
                 }
 
               //               RssItems feedItems;
-                log.Init(true, true);
 
                 string AppDatadirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader");
-//                if (!Init())
-//                    return;
+                if (!Init())
+                    return;
                 if (names.Count == 1)
                 {
                     config.Init(names[0]);
@@ -552,13 +551,14 @@ namespace HDTrailersNETDownloader
             if (config.TrailersIdenticaltoTheatricalTrailers)
             {
                 log.WriteLine("Config Specifies TrailersIdenticaltoTheatricalTrailers");
-                newtitle = title.Replace("Theatrical ", "");
+                newtitle = title.Replace("Theatrical", "");
             }
             else
             {
                 newtitle = title;
             }
             newtitle = Regex.Replace(newtitle, " Mirror", "", RegexOptions.IgnoreCase);
+
             if (config.ConsiderTheatricalandNumberedTrailersasIdentical)
             {
                 if (!newtitle.Contains("Teaser"))
@@ -827,7 +827,7 @@ namespace HDTrailersNETDownloader
                 {
                     string s1 = tempStringArray[i].Substring(tempStringArray[i].IndexOf(">") + 1);
                     string s2 = tempStringArray[i].Substring(tempStringArray[i].IndexOf("http"), tempStringArray[i].IndexOf("\" rel=\"") - tempStringArray[i].IndexOf("http"));
-
+                    string s3 = StringFunctions.subStrBetween(tempStringArray[i], "title=\"", "</span>");
                     nvc.Add(s1, s2);
                 }
 
@@ -1058,7 +1058,7 @@ namespace HDTrailersNETDownloader
                     int fileSize = Convert.ToInt32(myWebResponse.ContentLength);
                     if(fileSize < 0) {
                         StartPointInt = 0;
-                        log.WriteLine("Invalid trailer size (" + fileSize + " bytes) from Server. Skipping ...");
+                        log.WriteLine("Error: Invalid Trailer size (" + fileSize + " bytes) from Server. Skipping ...");
                         return false;
                     }
 
@@ -1123,8 +1123,16 @@ namespace HDTrailersNETDownloader
                                 // Write the data from the buffer to the local hard drive
                                 strLocal.Write(downBuffer, 0, bytesSize);
                                 StartPointInt += bytesSize;
-                                double t = ((double)StartPointInt) / fileSize;
-                                log.ConsoleWrite(t.ToString("###.0%\r", CultureInfo.InvariantCulture));
+                                if (fileSize == -1)
+                                {
+                                    double t = (double)StartPointInt;
+                                    log.ConsoleWrite(t.ToString("###%\r", CultureInfo.InvariantCulture));
+                                }
+                                else
+                                {
+                                    double t = ((double)StartPointInt) / fileSize;
+                                    log.ConsoleWrite(t.ToString("###.0%\r", CultureInfo.InvariantCulture));
+                                }
                             }
                         }
                         else

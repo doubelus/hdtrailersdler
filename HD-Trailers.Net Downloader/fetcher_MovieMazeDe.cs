@@ -39,7 +39,7 @@ namespace HDTrailersNETDownloader
                 string type = StringFunctions.subStrBetween(newdata, "<title>", "</title>");
                 type = StringFunctions.subStrBetween(type, "<![CDATA[", "]]>");
                 mi.name = mi.name + " (" + type + ")";
-
+                mi.name = Regex.Replace(mi.name, @"\s+", " "); 
                 string urllow = StringFunctions.subStrBetween(newdata, "<urllow>", "</urllow>");
                 urllow = StringFunctions.subStrBetween(urllow, "<![CDATA[", "]]>");
                 if (urllow != null)

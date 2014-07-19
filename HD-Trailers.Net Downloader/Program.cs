@@ -47,7 +47,7 @@ namespace HDTrailersNETDownloader
         static string MailBody;
         static bool hideconsolewindow = false; 
 //        static List<string> extra; 
-        static string Version = "HD-Trailers.Net Downloader v2.3.6";
+        static string Version = "HD-Trailers.Net Downloader v2.4.0";
         static int NewTrailerCount = 0;
         [PreEmptive.Attributes.Setup(CustomEndpoint = "so-s.info/PreEmptive.Web.Services.Messaging/MessagingServiceV2.asmx")]
         [PreEmptive.Attributes.Teardown()]
@@ -573,7 +573,7 @@ namespace HDTrailersNETDownloader
                 newtitle = title;
             }
 
-            if (Exclusions.Contains(newtitle))
+            if (Exclusions.Contains(Regex.Replace(newtitle, @"\s+", " ")))
             {
                 log.WriteLine("Title found in exclusions list. Skipping...");
                 AddToEmailSummary(title + ": Title found in exclusions list. Skipping...");
@@ -670,7 +670,7 @@ namespace HDTrailersNETDownloader
             //If download went ok, and we're using exclusions, add to list
             if (tempBool && config.UseExclusions)
             {
-                Exclusions.Add(newtitle);
+                Exclusions.Add(Regex.Replace(newtitle, @"\s+", " "));
                 log.VerboseWrite("Exclusion added");
             }
 
@@ -1058,8 +1058,13 @@ namespace HDTrailersNETDownloader
                     int fileSize = Convert.ToInt32(myWebResponse.ContentLength);
                     if(fileSize < 0) {
                         StartPointInt = 0;
-                        log.WriteLine("Error: Invalid Trailer size (" + fileSize + " bytes) from Server. Skipping ...");
-                        return false;
+                        log.WriteLine("Possilbe Issue: Trailer size (" + fileSize + " bytes) from Server. Process Carefully");
+ //                       return false;
+                    }
+                    if (StartPointInt > fileSize) {
+                        log.WriteLine("Trailer size on disk is greater than size on web (" + StartPointInt + " > " + fileSize + " bytes). Starting over.");
+                        File.Delete(Filename);
+                        StartPointInt = 0;
                     }
 
                     myWebResponse.Close();
@@ -1088,6 +1093,12 @@ namespace HDTrailersNETDownloader
                         if (StartPointInt > 0)
                             myWebRequest.AddRange(StartPointInt, fileSize);
 
+//                        Uri myUri = new Uri(downloadURL);
+//                        // Create a 'HttpWebRequest' object for the specified url. 
+//                        HttpWebRequest myHttpWebRequest = (HttpWebRequest)WebRequest.Create(myUri);
+//                        // Send the request and wait for response.
+//                        myHttpWebResponse = (HttpWebResponse)myHttpWebRequest.GetResponse();
+
                         // Retrieve the response from the server
                         myWebResponse = (HttpWebResponse)myWebRequest.GetResponse();
 
@@ -1115,7 +1126,7 @@ namespace HDTrailersNETDownloader
                         // A buffer for storing and writing the data retrieved from the server
                         byte[] downBuffer = new byte[65536];
 
-                        if (fileSize != -1)
+                        if (fileSize != -2)
                         {
                             // Loop through the buffer until the buffer is empty
                             while ((bytesSize = strResponse.Read(downBuffer, 0, downBuffer.Length)) > 0)
@@ -1281,7 +1292,10 @@ namespace HDTrailersNETDownloader
                         exclusions = new ArrayList();
 
                     log.VerboseWrite(exclusions.Count.ToString() + " exclusions loaded.");
-
+                    for (int i = 0; i<exclusions.Count; i++) 
+                    {
+                        exclusions[i] = Regex.Replace((string)exclusions[i], @"\s+", " ");
+                    }
                     return exclusions;
                 }
                 catch (Exception e)

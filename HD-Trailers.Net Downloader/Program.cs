@@ -47,7 +47,7 @@ namespace HDTrailersNETDownloader
         static string MailBody;
         static bool hideconsolewindow = false; 
 //        static List<string> extra; 
-        static string Version = "HD-Trailers.Net Downloader v2.4.0";
+        static string Version = "HD-Trailers.Net Downloader v2.4.5";
         static int NewTrailerCount = 0;
         [PreEmptive.Attributes.Setup(CustomEndpoint = "so-s.info/PreEmptive.Web.Services.Messaging/MessagingServiceV2.asmx")]
         [PreEmptive.Attributes.Teardown()]
@@ -73,8 +73,6 @@ namespace HDTrailersNETDownloader
               //               RssItems feedItems;
 
                 string AppDatadirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HD-Trailers.Net Downloader");
-                if (!Init())
-                    return;
                 if (names.Count == 1)
                 {
                     config.Init(names[0]);
@@ -83,6 +81,8 @@ namespace HDTrailersNETDownloader
                 {
                     config.Init();
                 }
+                if (!Init())
+                    return;
                 log.WriteLine(Version);
                 log.WriteLine("CodePlex: http://www.codeplex.com/hdtrailersdler");
                 log.WriteLine("HD Trailer Blog: http://www.hd-trailers.net");
@@ -217,7 +217,7 @@ namespace HDTrailersNETDownloader
             }
             catch (Exception e)
             {
-                log.WriteLine("1. Unhandled Exception....");
+                     log.WriteLine("1. Unhandled Exception....");
                 log.WriteLine("Exception: " + e.Message);
             }
 
@@ -230,7 +230,7 @@ namespace HDTrailersNETDownloader
         {
             try
             {
-                config.Init();
+//                config.Init();
                 log.Init(config.VerboseLogging, config.PhysicalLog);
                 log.VerboseWrite("Config loaded");
                 log.VerboseWrite(config.Info());
@@ -842,6 +842,7 @@ namespace HDTrailersNETDownloader
                 tempString = tempString.Substring(tempString.IndexOf("<img "));
                 tempString = tempString.Substring(tempString.IndexOf("src=\"") + 5);
                 tempString = tempString.Substring(0, tempString.IndexOf("\""));
+                if (!tempString.StartsWith("http:", StringComparison.OrdinalIgnoreCase)) tempString = "http:" + tempString;
 
                 nvc.Add("poster", tempString);
                 return nvc;
@@ -1021,7 +1022,7 @@ namespace HDTrailersNETDownloader
 // Check length of filename. MAX_PATH set to 260. Need to subtract 4 since .tmp will be added to filename
             if (FullFileName.Length > MAX_PATH - 4)
             {
-                log.WriteLine("Trailer Filename too Long. Skipping...");
+                log.WriteLine("Trailer Filename too Long (>256 characters). Skipping...");
                 AddToEmailSummary(FullFileName + ": Trailer Filename too Long. Skipping...");
                 return false;
             }
@@ -1058,7 +1059,7 @@ namespace HDTrailersNETDownloader
                     int fileSize = Convert.ToInt32(myWebResponse.ContentLength);
                     if(fileSize < 0) {
                         StartPointInt = 0;
-                        log.WriteLine("Possilbe Issue: Trailer size (" + fileSize + " bytes) from Server. Process Carefully");
+                        log.WriteLine("Possible Issue: Trailer size (" + fileSize + " bytes) from Server. Process Carefully");
  //                       return false;
                     }
                     if (StartPointInt > fileSize) {
@@ -1072,7 +1073,7 @@ namespace HDTrailersNETDownloader
 
                     if ((config.MinTrailerSize > 0) && (fileSize < config.MinTrailerSize) && (fileSize != -1))
                     {
-                        log.WriteLine("Trailer size smaller then MinTrailerSize. Skipping ...");
+                        log.WriteLine("Trailer size (" + fileSize + ") smaller then MinTrailerSize (" + config.MinTrailerSize +"). Skipping ...");
                         return false;
                     }
 
@@ -1158,13 +1159,21 @@ namespace HDTrailersNETDownloader
                         myWebResponse.Close();
                         FileInfo fi = new FileInfo(Filename);
                         StartPointInt = Convert.ToInt32(fi.Length);
-                        if ((StartPointInt == fileSize) || (fileSize == -1))
+                        if (StartPointInt > 0)
                         {
-                            File.Move(Filename, FullFileName);
+                            if ((StartPointInt == fileSize) || (fileSize == -1))
+                            {
+                                File.Move(Filename, FullFileName);
+                            }
+                            // Increment NewTrailerCount(er)
+                            NewTrailerCount = NewTrailerCount + 1;
+                            tempBool = true;
                         }
-                        // Increment NewTrailerCount(er)
-                        NewTrailerCount = NewTrailerCount + 1;
-                        tempBool = true;
+                        else
+                        {
+                            log.WriteLine("Downloaded Trailer file size is 0 bytes. Skipping...");
+                            tempBool = false;
+                        }
                     }
                     else if (StartPointInt == Convert.ToInt32(fileSize))
                     {
@@ -1501,10 +1510,10 @@ namespace HDTrailersNETDownloader
             Console.WriteLine ("Greet a list of individuals with an optional message.");
             Console.WriteLine ("If no message is specified, a generic greeting is used.");
             Console.WriteLine ();
-            Console.WriteLine ("Options:    e|edit   Edit config file");
-            Console.WriteLine ("            i|ini=   Specify config file");
-            Console.WriteLine ("            h|hide   Hide console window");
-            Console.WriteLine ("            ?|help   Bring up command line options");
+            Console.WriteLine ("Options:    -e|edit   Edit config file");
+            Console.WriteLine ("            -i|ini=   Specify config file");
+            Console.WriteLine ("            -h|hide   Hide console window");
+            Console.WriteLine ("            -?|help   Bring up command line options");
             Console.ReadLine(); 
             Environment.Exit(0); 
         }

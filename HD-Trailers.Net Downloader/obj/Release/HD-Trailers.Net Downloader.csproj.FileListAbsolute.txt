@@ -73,3 +73,4 @@ G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloa
 G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Release\HD-Trailers.Net Downloader.pdb
 G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\Newtonsoft.Json.dll
 G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\Newtonsoft.Json.xml
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Release\YoutubeExtractor.pdb

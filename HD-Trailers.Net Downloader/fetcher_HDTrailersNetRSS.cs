@@ -55,6 +55,7 @@ namespace HDTrailersNETDownloader
                 tempString = data.Substring(data.IndexOf("<strong>Link to Catalog</strong>"));
                 tempString = tempString.Substring(tempString.IndexOf("<img "));
                 tempString = StringFunctions.subStrBetween(tempString, "src=\"", "\"");
+                if (!tempString.StartsWith("http:", StringComparison.OrdinalIgnoreCase)) tempString = "http:" + tempString;
                 mi.nvc.Add("poster", tempString);
 
             }

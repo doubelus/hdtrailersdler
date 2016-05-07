@@ -17,11 +17,19 @@ namespace HDTrailersNETDownloader
             validurls = new List<string>();
             validurls.Add("http://www.hd-trailers.net/");
             validurls.Add("http://www.hd-trailers.net/Page/1/");
-            validurls.Add("http://www.hd-trailers.net/TopMovies/");
-            validurls.Add("http://www.hd-trailers.net/OpeningThisWeek/");
-            validurls.Add("http://www.hd-trailers.net/ComingSoon/");
-            validurls.Add("http://www.hd-trailers.net/BluRay/");
-            validurls.Add("http://www.hd-trailers.net/AcademyAward83/");
+            validurls.Add("http://www.hd-trailers.net/Page/2/");
+            validurls.Add("http://www.hd-trailers.net/Page/3/");
+            validurls.Add("http://www.hd-trailers.net/Page/4/");
+            validurls.Add("http://www.hd-trailers.net/Page/5/");
+            validurls.Add("http://www.hd-trailers.net/Page/6/");
+            validurls.Add("http://www.hd-trailers.net/Page/7/");
+            validurls.Add("http://www.hd-trailers.net/Page/8/");
+            validurls.Add("http://www.hd-trailers.net/Page/9/");
+
+            validurls.Add("http://www.hd-trailers.net/Top-Movies/");
+            validurls.Add("http://www.hd-trailers.net/Most-Watched/");
+            validurls.Add("http://www.hd-trailers.net/Opening-This-Week/");
+            validurls.Add("http://www.hd-trailers.net/Coming-Soon/");
             validurls.Add("http://www.hd-trailers.net//library/0/");
             validurls.Add("http://www.hd-trailers.net//library/a/");
             validurls.Add("http://www.hd-trailers.net//library/b/");
@@ -89,7 +97,7 @@ namespace HDTrailersNETDownloader
                 string trailerType;
                 string data = Program.ReadDataFromLink(mi.url);
 //                string[] tempStringArray = StringFunctions.splitBetween(data,"<tr style=\"\">","</tr>");
-                string[] tempStringArray = StringFunctions.splitBetween(data, "<tr itemprop=", "</tr>");
+                string[] tempStringArray = StringFunctions.splitBetween(data, "<tr  itemprop=", "</tr>");
                 for (int i = 0; i < tempStringArray.Length; i++)
                 {
                     if (tempStringArray[i].Contains("standardTrailerName"))
@@ -153,6 +161,7 @@ namespace HDTrailersNETDownloader
                         }
                         string poster = StringFunctions.subStrBetween(data, "<span class=\"topTableImage\">", "</span>");
                         poster = StringFunctions.subStrBetween(poster,"src=\"","\"");
+                        if (!poster.StartsWith("http:", StringComparison.OrdinalIgnoreCase)) poster = "http:" + poster;
                         mi.nvc.Add("poster", poster);
                         break;
                     }

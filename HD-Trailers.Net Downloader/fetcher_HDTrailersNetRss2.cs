@@ -97,6 +97,7 @@ namespace HDTrailersNETDownloader
                             }
                             string poster = StringFunctions.subStrBetween(data, "<span class=\"topTableImage\">", "</span>");
                             poster = StringFunctions.subStrBetween(poster, "src=\"", "\"");
+                            if (!poster.StartsWith("http:", StringComparison.OrdinalIgnoreCase)) poster = "http:" + poster;
                             mi.nvc.Add("poster", poster);
                             break;
                         }

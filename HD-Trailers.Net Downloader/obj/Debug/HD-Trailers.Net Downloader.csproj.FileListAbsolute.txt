@@ -43,3 +43,25 @@ G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\b
 G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.application
 G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.exe.manifest
 G:\HD-Trailers.Net Downloader Source\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.application
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.exe.config
+G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.exe
+G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.pdb
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.exe.manifest
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.application
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.exe
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\HD-Trailers.Net Downloader.pdb
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\Newtonsoft.Json.dll
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\PreEmptive.Attributes.dll
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\RestSharp.dll
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\SimpleConfigEditor.dll
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\TMDbLib.dll
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\YoutubeExtractor.dll
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\Newtonsoft.Json.xml
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\RestSharp.xml
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\TMDbLib.pdb
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\YoutubeExtractor.pdb
+G:\hdtrailersdler\HD-Trailers.Net Downloader\bin\Debug\YoutubeExtractor.xml
+G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.csprojResolveAssemblyReference.cache
+G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.TrustInfo.xml
+G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.exe.manifest
+G:\hdtrailersdler\HD-Trailers.Net Downloader\obj\Debug\HD-Trailers.Net Downloader.application

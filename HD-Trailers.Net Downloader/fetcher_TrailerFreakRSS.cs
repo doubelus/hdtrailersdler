@@ -68,6 +68,7 @@ namespace HDTrailersNETDownloader
                 }
                 string posterUrl = "http://www.trailerfreaks.com/" + StringFunctions.subStrBetween(main, "<img src = \"", "\"");
                 mi.nvc.Add("poster", posterUrl);
+                if (!posterUrl.StartsWith("http:", StringComparison.OrdinalIgnoreCase)) posterUrl = "http:" + posterUrl;
                 mi.imdbId = StringFunctions.subStrBetween(main, "www.imdb.com/title/", "/");
                 for (int n = 0; n < mi.nvc.Count; n++)
 
